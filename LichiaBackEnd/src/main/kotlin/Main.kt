@@ -1,16 +1,42 @@
-package org.example
+package br.com.lichia.models
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+
+
 fun main() {
-    val name = "Lichia"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+    val caue = Usuario("Cauê", 27, "1234")
+    val gi = Admin("Gi", 20, "4321")
+    println(caue)
+    val chato = Usuario("Chato", 22, "1111")
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
-    }
+    val marioOdissey = Game(
+        "Super Mario Odissey",
+        "Aventura",
+        2017,
+        listOf("Switch"),
+    )
+
+    val zeldaTOTK = Game(
+        "Zelda: Tears of the Kingdom",
+        "Aventura",
+        2023,
+        listOf("Switch"),
+    )
+
+
+    // Interação Usuário-Usuário
+
+    val registro1 = Registro(caue, marioOdissey)
+    println(caue)
+
+    caue.solicitarAmizade(gi)
+    gi.aceitarAmizade(caue)
+    println(caue in gi.listaAmigos)
+
+    caue.criaRegistro(zeldaTOTK)
+//    println(caue.listaRegistros[0].game)
+
+
+
+
+
 }
