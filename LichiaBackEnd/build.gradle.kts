@@ -16,6 +16,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.6.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("io.mockk:mockk:1.13.5")
+    implementation(kotlin("test"))
 }
 
 tasks.test {
