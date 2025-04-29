@@ -1,9 +1,0 @@
-Copilot important prompts
-
-Hello! I am currently in a computer science course in which I need to develop an open source software from scratch. I can choose whatever project I'd like, but it must follow the following constrains for the developing: 
-1) It must incorporate OOP concepts
-2) It must use some database (at least 4 related tables, and I already have a good csv to start with)
-3) The backend of the project must have a 90% coverage of automated tests
-4) The backend must be programmed in kotlin
-5) the front end must use javascript
-So, the idea I have so far is: I want to create sort of social media where users can log the games they played and evaluate them, very simmilar to the already existing backloggd. But I also want the software to have a game suggestion system integrated to it. Also, there is the problem that I have never coded in Kotlin before, so you'll have to go teaching me the ropes as we go. Could you help me organize the project and the next steps? I already have some ideas about the classes we should implement, but I still haven't written any line of code, and I'm way behind schedule. Could you give me a headstart and a guideline so we can go through this project together?

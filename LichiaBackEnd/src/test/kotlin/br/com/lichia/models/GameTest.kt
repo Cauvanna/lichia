@@ -1,5 +1,6 @@
 package br.com.lichia.models
-import org.junit.jupiter.api.Assertions.*
+
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class GameTest {
@@ -13,7 +14,7 @@ class GameTest {
         game.listaDesejantes.add(usuario1)
         game.listaDesejantes.add(usuario2)
 
-        assertEquals(2, game.quantidadeDesejantes())
+        Assertions.assertEquals(2, game.quantidadeDesejantes())
     }
 
     @Test
@@ -25,7 +26,7 @@ class GameTest {
         game.listaRegistros.add(Registro(usuario1, game, nota = 9))
         game.listaRegistros.add(Registro(usuario2, game, nota = 8))
 
-        assertEquals(8.5, game.mediaNotas())
+        Assertions.assertEquals(8.5, game.mediaNotas())
     }
 
     @Test
@@ -40,7 +41,7 @@ class GameTest {
         game.listaRegistros.add(Registro(usuario2, game, nota = 8))
         game.listaRegistros.add(Registro(usuario3, game)) // Nota nula
 
-        assertEquals(8.5, game.mediaNotas())
+        Assertions.assertEquals(8.5, game.mediaNotas())
     }
 
 }
