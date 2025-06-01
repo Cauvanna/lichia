@@ -14,7 +14,18 @@ import io.ktor.server.request.*
 
 
 fun Application.configureSerialization(repository: TaskRepository) {
+    /*
+    * " When you created the project you included the Content Negotiation plugin. This plugin looks at the types of
+    *  content that the client can render and matches these against the content types that the current service can
+    *  provide. Hence, the term Content Negotiation. (...) "
+
+    * */
     install(ContentNegotiation) {
+        /*
+        * " (...)This code installs the ContentNegotiation plugin, and also configures the kotlinx.serialization plugin.
+        *  With this, when clients send requests the server can send back objects serialized as JSON."
+        * FONTE: https://ktor.io/docs/server-create-restful-apis.html#via-browser
+        */
         json()
     }
     routing {

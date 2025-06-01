@@ -1,5 +1,4 @@
 package br.com.lichia.models
-
 import kotlinx.serialization.Serializable
 
 enum class Priority {

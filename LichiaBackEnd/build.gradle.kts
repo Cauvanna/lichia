@@ -1,3 +1,8 @@
+// Este arquivo cuida dos detalhes da build e foi gerado automaticamente pelo Gradle (mas com edições manuais
+// para os nosso propósitos).
+
+// Arquivos .kts são do tipo Kotlin Script. Usa sintaxe semelhante ao Kotlin, mas é executado como script ao
+// invés de sem compilar como um .kt.
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -20,12 +25,15 @@ repositories {
 }
 
 dependencies {
-    // Lichia pre ktor
-    testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.postgresql:postgresql:42.6.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:3.1.3")
+    testImplementation("io.ktor:ktor-server-test-host:3.1.3")
+    testImplementation("io.ktor:ktor-client-content-negotiation:3.1.3")
+    testImplementation("io.ktor:ktor-client-cio:3.1.3")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.1.10")
 
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.core)
@@ -38,14 +46,11 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.ktor.client.content.negotiation)
 }
 
-//tasks.test {
-//    useJUnitPlatform()
-//}
+tasks.test {
+    useJUnitPlatform()
+}
 kotlin {
     jvmToolchain(21)
 }
