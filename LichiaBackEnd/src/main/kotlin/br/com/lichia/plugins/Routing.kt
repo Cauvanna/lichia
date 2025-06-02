@@ -6,6 +6,7 @@ import io.ktor.server.http.content.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import br.com.lichia.routes.*
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -16,7 +17,7 @@ fun Application.configureRouting() {
     routing {
         // Rota raiz do servidor
         get("/") {
-            call.respondText("Hello World!")
+            call.respondText("Hello, Lichia!")
         }
 
         // Só mais um exemplo de endereço do servidor
@@ -25,6 +26,8 @@ fun Application.configureRouting() {
             val type = ContentType.parse("text/html")
             call.respondText(text, type)
         }
+
+        gameRoutes() // Rota para jogos, definida em `GamesRoutes.kt`
 
         // Static plugin. Tente acessar `/static/index.html` para ver o Task Manager
         staticResources("/static", "static")

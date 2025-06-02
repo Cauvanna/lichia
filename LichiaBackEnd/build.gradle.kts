@@ -34,6 +34,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:3.1.3")
     testImplementation("io.ktor:ktor-client-cio:3.1.3")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.1.10")
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.1")
 
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.core)
