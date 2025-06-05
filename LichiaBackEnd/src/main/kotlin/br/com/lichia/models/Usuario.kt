@@ -2,6 +2,7 @@ package br.com.lichia.models
 
 open class Usuario(
     val nome: String,
+    // (*) Colocar limite mínimo? Ideia: usar classificação indicativa de jogos para mostrar ou não conforme idade
     val idade: Int,
     var senha: String,
     var visibilidade: Boolean = true, // Privacidade padrão é true (conta aberta)

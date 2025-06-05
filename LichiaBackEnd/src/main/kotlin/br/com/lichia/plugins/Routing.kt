@@ -6,6 +6,7 @@ import io.ktor.server.http.content.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import br.com.lichia.routes.*
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -14,10 +15,28 @@ fun Application.configureRouting() {
         }
     }
     routing {
+        // Rota raiz do servidor
         get("/") {
-            call.respondText("Hello World!")
+            call.respondText("Hello, Lichia!")
         }
-        // Static plugin. Try to access `/static/index.html`
+
+        // Só mais um exemplo de endereço do servidor
+        get("/test1") {
+            val text = "<h1>Hello From Ktor</h1>"
+            val type = ContentType.parse("text/html")
+            call.respondText(text, type)
+        }
+
+        gameRoutes() // Rota para jogos, definida em `GamesRoutes.kt`
+
+        // Static plugin. Tente acessar `/static/index.html` para ver o Task Manager
         staticResources("/static", "static")
+
+        /*
+        * Exemplo do tutorial do Ktor "https://ktor.io/docs/server-create-a-new-project.html#configure-static-content"
+        * Note que criamos uma pasta em resources chamada `mycontent` e dentro dela criamos o arquivo sample.html
+        * Acesse o endereço `/content/sample.html` para ver o conteúdo do arquivo.
+        */
+        staticResources("/content", "mycontent")
     }
 }
