@@ -1,13 +1,17 @@
 package br.com.lichia.models
 
+import br.com.lichia.dao.DesejoDAO
+import br.com.lichia.dao.UsuarioDAO
+
 open class Game(
     val titulo: String,
-    val genero: String,
+    val genero: String?,
     val anoLancamento: Int,
     // Mudamos de lista de consoles para apenas console de lançamento, pois infelizmente não temos dados suficientes
-    val consoleLancamento: String = "",
+    val consoleLancamento: String? = "",
     var listaRegistros: MutableList<Registro> = mutableListOf(), // Lista de registros
     var listaResenhas: MutableList<Resenha> = mutableListOf(), // Lista de resenhas
+    @Transient // Evita serialização desse campo, para não ser persistido no banco de dados
     var listaDesejantes: MutableList<Usuario> = mutableListOf(), // Lista de usuários que desejam o jogo
     // Mais alguns atributos adicionados para obter os dados desejados do .csv base do CORGIS
     val ehHandheld: Boolean = false,
@@ -21,10 +25,18 @@ open class Game(
     val duracaoMainStoryAverage: Double = 0.0,
     val duracaoMainStoryExtras: Double = 0.0,
     val duracaoCompletionistAverage: Double = 0.0,
+    val id: Int = -1, // ID único do jogo
 
 ) {
+    // Atualizada para estar em sincronia com a DB
     fun quantidadeDesejantes(): Int {
-        return listaDesejantes.size // Retorna o tamanho da lista de desejantes
+        return DesejoDAO.obterUsuariosQueDesejam(this).size
+    }
+
+    // Recebe uma lista com os IDs dos usuários que desejam o jogo
+    fun carregarDesejantesDoBanco() {
+        val userIds = DesejoDAO.obterUsuariosQueDesejam(this)
+        this.listaDesejantes = userIds.mapNotNull { id -> UsuarioDAO.getUsuarioById(id) }.toMutableList()
     }
 
     fun mediaNotas(): Double {

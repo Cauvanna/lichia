@@ -9,6 +9,7 @@ package br.com.lichia.database
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
 
+// As tabelas a seguir usam o Exposed para definir a estrutura do banco de dados em SQL.
 
 object Games : Table("games") {
     val id = integer("id").autoIncrement()
@@ -29,7 +30,7 @@ object Games : Table("games") {
     override val primaryKey = PrimaryKey(id)
 }
 
-object Users : Table("users") {
+object Usuarios : Table("users") {
     val id = integer("id").autoIncrement()
     val nome = text("nome")
     val senha = text("senha")
@@ -38,4 +39,19 @@ object Users : Table("users") {
     val dataCadastro = long("data_cadastro")
 
     override val primaryKey = PrimaryKey(id)
+}
+
+/*****************************************************************************************************
+ * TABELAS RELACIONAIS
+ *
+ * As tabelas a seguir são usadas para relacionar os jogos com os usuários, permitindo que os usuários
+ * registrem jogos, escrevam resenhas e adicionem jogos à sua lista de desejos.
+ *
+ *****************************************************************************************************/
+
+// Tabela many-to-many entre Usuários e Jogos para registrar quais jogos cada usuário deseja
+object Desejos : Table("desejos") {
+    val usuarioId = integer("usuario_id").references(Usuarios.id)
+    val gameId = integer("game_id").references(Games.id)
+    override val primaryKey = PrimaryKey(usuarioId, gameId)
 }

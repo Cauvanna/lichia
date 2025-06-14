@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-//    val repository = PostgresTaskRepository()
+
     configureSerialization()
     configureDatabases()
 

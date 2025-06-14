@@ -2,7 +2,7 @@ package br.com.lichia.dto
 
 /*
  * DTO = Data Transfer Object
- * Essa arquivo defina uma classe dedicada a transferir dados de jogos entre o servidor e o cliente.
+ * Essa arquivo define uma classe dedicada a transferir dados de jogos entre o servidor e o cliente.
 
  */
 import kotlinx.serialization.Serializable

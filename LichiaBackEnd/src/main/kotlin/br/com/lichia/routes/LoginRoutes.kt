@@ -1,6 +1,6 @@
 package br.com.lichia.routes
 
-import br.com.lichia.database.Users
+import br.com.lichia.database.Usuarios
 import br.com.lichia.models.LoginRequest
 import br.com.lichia.models.LoginResponse
 import io.ktor.server.request.*
@@ -15,7 +15,7 @@ fun Route.loginRoute() {
         val loginData = call.receive<LoginRequest>()
 
         val userExists = transaction {
-            Users.selectAll().where { (Users.nome eq loginData.username) and (Users.senha eq loginData.senha) }.count() > 0
+            Usuarios.selectAll().where { (Usuarios.nome eq loginData.username) and (Usuarios.senha eq loginData.senha) }.count() > 0
         }
 
         if (userExists) {

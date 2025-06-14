@@ -4,6 +4,9 @@ package br.com.lichia.models
 import java.time.LocalDate
 import java.time.Period
 
+import br.com.lichia.dao.DesejoDAO
+import br.com.lichia.dao.GameDAO
+
 open class Usuario(
     val nome: String,
     // (*) Colocar limite mínimo? Ideia: usar classificação indicativa de jogos para mostrar ou não conforme idade
@@ -16,7 +19,9 @@ open class Usuario(
     var listaGames: MutableList<Game> = mutableListOf(), // Lista de jogos
     // var listaRegistros: MutableList<Registro> = mutableListOf(), // Lista de registros
     // var listaResenhas: MutableList<Resenha> = mutableListOf(), // Lista de resenhas
-    var listaDesejos: MutableList<Game> = mutableListOf() // Lista de desejos
+    @Transient // Evita serialização desse campo, para não ser persistido no banco de dados
+    var listaDesejos: MutableList<Game> = mutableListOf(), // Lista de desejos
+    val id: Int = -1, // ID único do usuário (inicializado como -1 para indicar que ainda não foi definido, pode ser gerado automaticamente posteriormente
 )
 {
 
@@ -107,8 +112,10 @@ open class Usuario(
     // Interações Usuario-Game
 
     fun adicionaDesejo(game: Game) : Boolean{
-        if (game !in listaDesejos) {
-            listaDesejos.add(game)
+        val sucesso = DesejoDAO.adicionarDesejo(this, game)
+
+        if (sucesso) {
+            listaDesejos.add(game)  // só atualiza se deu certo no banco
             game.listaDesejantes.add(this)
             println("$nome adicionou jogo ${game.titulo} adicionado à lista de desejos.")
             return true
@@ -119,7 +126,8 @@ open class Usuario(
     }
 
     fun removeDesejo(game: Game) : Boolean {
-        if (game in listaDesejos) {
+        val sucesso = DesejoDAO.removerDesejo(this, game)
+        if (sucesso) {
             listaDesejos.remove(game)
             game.listaDesejantes.remove(this)
             println("$nome removeu jogo ${game.titulo} removido da lista de desejos.")
@@ -129,6 +137,14 @@ open class Usuario(
             return false
         }
     }
+
+    // Usar essa função para syncar no login/load de um usuário da DB
+    fun carregarDesejosDoBanco() {
+        val gameIds = DesejoDAO.obterDesejosDoUsuario(this)
+        // Usamos função que busca os games pelo ID
+        this.listaDesejos = gameIds.mapNotNull { id -> GameDAO.getGameById(id) }.toMutableList()
+    }
+
 
     /****************************************************************************************************************/
     // Interações Usuario-Registro

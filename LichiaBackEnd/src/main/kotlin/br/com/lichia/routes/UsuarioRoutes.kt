@@ -1,6 +1,6 @@
 package br.com.lichia.routes
 
-import br.com.lichia.database.Users
+import br.com.lichia.database.Usuarios
 import br.com.lichia.models.LoginResponse
 import br.com.lichia.models.RegistroUsuarioRequest
 import br.com.lichia.models.RegistroUsuarioResponse
@@ -22,7 +22,7 @@ fun Route.userRoutes() {
 
             // Checamos se usuário com mesmo nome já existe
             val userExists = transaction {
-                Users.selectAll().any { it[Users.nome] == request.username }
+                Usuarios.selectAll().any { it[Usuarios.nome] == request.username }
             }
             if (userExists) {
                 call.respond(RegistroUsuarioResponse(
@@ -33,7 +33,7 @@ fun Route.userRoutes() {
             }
 
             transaction {
-                Users.insert {
+                Usuarios.insert {
                     it[nome] = request.username
                     it[senha] = request.senha
                     it[dataNascimento] = LocalDate.parse(request.dataNascimento)

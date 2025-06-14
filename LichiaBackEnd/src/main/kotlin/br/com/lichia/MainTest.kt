@@ -1,5 +1,4 @@
 package br.com.lichia
-import br.com.lichia.models.Game
 import br.com.lichia.models.Usuario
 import java.time.LocalDate
 
@@ -13,4 +12,6 @@ fun main() {
     )
     println(usuario.toString())
 }
+
+//(***) Continuar daqui: Fazer testes manuais para alterações envolvendo a adiação da tabela Desejos
 

@@ -56,3 +56,9 @@ tasks.test {
 kotlin {
     jvmToolchain(21)
 }
+
+sourceSets {
+    test {
+        resources.srcDirs("src/test/resources")
+    }
+}
