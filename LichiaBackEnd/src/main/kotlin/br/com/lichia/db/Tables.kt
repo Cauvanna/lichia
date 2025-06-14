@@ -7,6 +7,8 @@
 package br.com.lichia.database
 
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.javatime.date
+
 
 object Games : Table("games") {
     val id = integer("id").autoIncrement()
@@ -30,9 +32,9 @@ object Games : Table("games") {
 object Users : Table("users") {
     val id = integer("id").autoIncrement()
     val nome = text("nome")
-    val idade = integer("idade")
     val senha = text("senha")
     val visibilidade = bool("visibilidade").default(true)
+    val dataNascimento = date("data_nascimento")
     val dataCadastro = long("data_cadastro")
 
     override val primaryKey = PrimaryKey(id)

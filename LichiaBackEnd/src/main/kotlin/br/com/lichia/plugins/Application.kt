@@ -19,4 +19,6 @@ fun Application.module() {
 //    importGamesFromCSV("/home/caue/Área_de_Trabalho/BCC/5øSEMESTRE/ES/Projeto/Lichia/" +
 //            "LichiaBackEnd/DataSets/ArquivoOriginalCorgis/videoGames.csv")
     configureRouting()
+
+
 }

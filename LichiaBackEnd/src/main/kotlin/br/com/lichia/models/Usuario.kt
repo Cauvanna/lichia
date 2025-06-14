@@ -1,11 +1,15 @@
 package br.com.lichia.models
 
+// Para guardar data de nascimento
+import java.time.LocalDate
+import java.time.Period
+
 open class Usuario(
     val nome: String,
     // (*) Colocar limite mínimo? Ideia: usar classificação indicativa de jogos para mostrar ou não conforme idade
-    val idade: Int,
     var senha: String,
     var visibilidade: Boolean = true, // Privacidade padrão é true (conta aberta)
+    val dataNascimento: LocalDate,
     val dataCadastro: Long = System.currentTimeMillis(), // Grava momento da criação
     var listaSolicitacoes: MutableList<Usuario> = mutableListOf(), // Lista de solicitações de amizade
     var listaAmigos: MutableList<Usuario> = mutableListOf(), // Lista de amigos
@@ -16,8 +20,11 @@ open class Usuario(
 )
 {
 
-    // Interações Usuario-Self
+    // Obtém a idade do usuário com base na data de nascimento
+    val idade: Int
+        get() = Period.between(dataNascimento, LocalDate.now()).years
 
+    // Interações Usuario-Self
     fun autenticar(senha: String) =
         this.senha == senha
 
@@ -203,7 +210,7 @@ open class Usuario(
 
     // to string precisa de override
     override fun toString(): String {
-        return "Usuario(nome='$nome', idade=$idade)"
+        return "Usuario(nome='$nome', visibilidade='${visibilidade}, dataNascimento=$dataNascimento)"
     }
 }
 
@@ -212,9 +219,9 @@ open class Usuario(
 
 class Admin(
     nome: String,
-    idade: Int,
-    senha: String
-) : Usuario(nome, idade, senha) {
+    senha: String,
+    dataNascimento: LocalDate
+) : Usuario(nome, senha, true, dataNascimento) {
     fun excluirUsuario(usuario: Usuario) {
         TODO("Not yet implemented")
     }

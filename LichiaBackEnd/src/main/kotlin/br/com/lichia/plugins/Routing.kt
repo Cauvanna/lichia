@@ -27,6 +27,13 @@ fun Application.configureRouting() {
             call.respondText(text, type)
         }
 
+        // Página de LOGIN
+        loginRoute()
+
+        // Página para REGISTRO de usuários
+        userRoutes()
+
+        // routing da página /games
         gameRoutes() // Rota para jogos, definida em `GamesRoutes.kt`
 
         // Static plugin. Tente acessar `/static/index.html` para ver o Task Manager
@@ -38,5 +45,7 @@ fun Application.configureRouting() {
         * Acesse o endereço `/content/sample.html` para ver o conteúdo do arquivo.
         */
         staticResources("/content", "mycontent")
+
+
     }
 }
