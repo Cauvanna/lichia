@@ -19,8 +19,9 @@ class Resenha(
     val comentario: String,
     nota: Int, // obrigatória para uma resenha
     timestamp: Long = System.currentTimeMillis()
-) : Registro(usuario, game, nota, true, timestamp) { // Assumes the user has played the game
+) : Registro(usuario, game, nota, true, timestamp) { // Assume que o jogador jogou o jogo
     override fun toString(): String {
-        return "Resenha(usuario=${usuario.nome}, game=${game.titulo}, comentario='$comentario', nota=$nota, timestamp=$timestamp)"
+        return "Resenha(usuario=${usuario.nome}, game=${game.titulo}, " +
+                "comentario='$comentario', nota=$nota, timestamp=$timestamp)"
     }
 }

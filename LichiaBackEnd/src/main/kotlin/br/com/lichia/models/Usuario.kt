@@ -10,7 +10,7 @@ import br.com.lichia.dao.GameDAO
 open class Usuario(
     val nome: String,
     // (*) Colocar limite mínimo? Ideia: usar classificação indicativa de jogos para mostrar ou não conforme idade
-    var senha: String,
+    private var senha: String,
     var visibilidade: Boolean = true, // Privacidade padrão é true (conta aberta)
     val dataNascimento: LocalDate,
     val dataCadastro: Long = System.currentTimeMillis(), // Grava momento da criação
@@ -30,7 +30,7 @@ open class Usuario(
         get() = Period.between(dataNascimento, LocalDate.now()).years
 
     // Interações Usuario-Self
-    fun autenticar(senha: String) =
+    fun autenticar(senha: String) : Boolean =
         this.senha == senha
 
     fun alterarSenha(senha: String, senhaNova: String) : Boolean {
