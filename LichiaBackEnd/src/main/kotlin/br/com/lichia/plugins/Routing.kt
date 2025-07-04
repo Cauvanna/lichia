@@ -27,10 +27,8 @@ fun Application.configureRouting() {
             call.respondText(text, type)
         }
 
-        // Página de LOGIN
-        loginRoute()
 
-        // Página para REGISTRO de usuários
+        // Página para REGISTRO de usuários e LOGIN
         userRoutes()
 
         // routing da página /games

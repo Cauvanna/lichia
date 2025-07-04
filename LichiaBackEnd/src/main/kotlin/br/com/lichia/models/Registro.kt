@@ -25,3 +25,5 @@ class Resenha(
                 "comentario='$comentario', nota=$nota, timestamp=$timestamp)"
     }
 }
+
+

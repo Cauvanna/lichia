@@ -1,6 +1,7 @@
 package br.com.lichia.routes
 
 import br.com.lichia.database.Usuarios
+import br.com.lichia.models.LoginRequest
 import br.com.lichia.models.LoginResponse
 import br.com.lichia.models.RegistroUsuarioRequest
 import br.com.lichia.models.RegistroUsuarioResponse
@@ -49,6 +50,22 @@ fun Route.userRoutes() {
             )
         }
     }
+
+    // Rota para endpoint de login de usuários
+    route("/login") {
+        post {
+            val loginData = call.receive<LoginRequest>()
+
+            val userExists = transaction {
+                Usuarios.selectAll().where { (Usuarios.nome eq loginData.username) and (Usuarios.senha eq loginData.senha) }.count() > 0
+            }
+
+            if (userExists) {
+                val token = "usuario-${loginData.username}-logado"
+                call.respond(LoginResponse(successo = true, token = token))
+            } else {
+                call.respond(LoginResponse(successo = false, mensagem = "Usuário ou senha incorretos."))
+            }
+        }
+    }
 }
-
-

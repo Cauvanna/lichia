@@ -36,8 +36,8 @@ O software deve ter as seguintes funcionalidades:
 	- ./gradlew run
 
 	- Nesta versão de commit, isso faz com que o servidor comece a rodar. Para visitá-lo, mantenha o terminal aberto enquanto acessa os endereços definidos em LichiaBackEnd/src/main/br/com/lichia/plugins/Routing.kt
-- OBS: Ao manejar o arquivo por dentro do IntelliJ, algumas alterações nos arquivos farão com que o ícone de um elefante (símbolo do Gradlew) apareça próximo ao canto superior direito. Clique nele para que o Gradlew seja "informado" sobre as atualizações feitas. Algumas partes do código podem deixar de funcionar caso o Gradle não esteja atualizado.
-- Para dar buid e run dentro do intelliJ, abra o menu do Gradle (elefante no menu lateral direito):
+- OBS: Ao manejar o projeto por dentro do IntelliJ, algumas alterações nos arquivos farão com que o ícone de um elefante (símbolo do Gradlew) apareça próximo ao canto superior direito. Clique nele para que o Gradlew seja "informado" sobre as atualizações feitas. Algumas partes do código podem deixar de funcionar caso o Gradle não esteja atualizado.
+- Para dar build e run dentro do intelliJ, abra o menu do Gradle (elefante no menu lateral direito):
 	- Build: pasta build, e duplo clique no arquivo build. 
 	- Run: pasta application, duplo clique no arquivo run.
 
@@ -47,19 +47,19 @@ O software deve ter as seguintes funcionalidades:
 - Mais informações sobre o projeto base criado pelo gerador no arquivo LichiaBackEnd/src/README.md. É um README criado automaticamente ao usarmos o gerador do ktor.
 - HOCON como arquivo de configuração (está no arquivo LichiaBackEnd/src/main/resources/application.conf)
 - Para mais informações e tutoriais do Ktor, visite o [site docs oficial](https://ktor.io/docs/welcome.html).
-- Para rodar o servidor, execute o arquivo LichiaBackEnd/src/main/br/com/lichia/plugins/Application.kt. O endereço usado será exibido no terminal (mas por padrão, será o http://localhost/8080 ou  http://0.0.0.0:8080). Para ver o que está acontecendo, basta visitar este endereço em um navegador.
+- Para rodar o servidor, execute o run do gradle (explicado no item anterior) ou rode o arquivo LichiaBackEnd/src/main/br/com/lichia/plugins/Application.kt. O endereço usado será exibido no terminal (mas por padrão, será o http://localhost/8080 ou  http://0.0.0.0:8080). Para ver o que está acontecendo, basta visitar este endereço em um navegador.
 - Exemplos das páginas e seus endereços definidos para este commit estão na [seção "Páginas"](#páginas)
 - Para criação e edição dos nomes dos endereços do servidor, vá no arquivo LichiaBackEnd/src/main/br/com/lichia/plugins/Routing.kt
 
 ## Front-end e Back-end: informações úteis
-- No tutorial do Ktor ["Create a RESTful API"](https://ktor.io/docs/server-create-restful-apis.html#via-browser), checar a sessão "Content Negotiation via JavaScript". Por ora, nosso código exibe um JSON diretamente no browser. Mais pra frente, vamos querer que um JavaScript esteja rodando no browser para manejar essa exibição. Podemos usar um framework como React para cuidar disso. No nosso código atual, isso é apenas simulado no arquivo LichiaBackEnd/src/main/resources/static/index.html.
+- No tutorial do Ktor ["Create a RESTful API"](https://ktor.io/docs/server-create-restful-apis.html#via-browser), checar a sessão "Content Negotiation via JavaScript". Por ora, nosso código exibe um JSON diretamente no browser. Mais pra frente, vamos querer que um JavaScript esteja rodando no browser para manejar essa exibição. Podemos usar um framework como React para cuidar disso. No nosso código atual, há apenas uma simulação disso que foi criada no tutuorial do Ktor, caso se acesse o servidor no endereço /static, cujo conteúdo é criado pelo arquivo LichiaBackEnd/src/main/resources/static/index.html.
 
 ## Base de Dados
-- Para reunir uma lista razoavelmente vasta de títulos de videogames e seus atributos, usamos como base o arquivo videoGames.csv fornecido pelo site do [CORGIS Dataset Project](https://corgis-edu.github.io/corgis/csv/video_games/). O CORGIS é um projeto dedicado a fornecer Datasets destinados especialmente para estudos, o que nos pareceu bem adequado ao nosso projeto. Em nosso projeto, este está em /LichiaBackEnd/DataSets/ArquivoOriginalCorgis/videoGames.csv.
+- Para reunir uma lista razoavelmente vasta de títulos de videogames e seus atributos, usamos como base o arquivo videoGames.csv fornecido pelo site do [CORGIS Dataset Project](https://corgis-edu.github.io/corgis/csv/video_games/). O CORGIS é um projeto dedicado a fornecer Datasets destinados especialmente para estudos, o que nos pareceu bem adequado ao nosso projeto. O .csv está em /LichiaBackEnd/DataSets/ArquivoOriginalCorgis/videoGames.csv.
 - Após criarmos tabelas para Games e Usuários em postgres usando o pgAdmin, alimentamos a tabela de Games com os dados relevantes de videoGames.csv. Isso foi feito em Application.kt, invocando a função importGamesFromCSV(), que está atualmente comentada, para que não fiquemos reimportando o .csv toda vez que rodarmos o servidor (mas mantivemos a linha caso precisemos importar tudo de novo por alguma corrupção da nossa base de dados). A importação usa o código definido em CSVImporter.kt e as relações entre videoGame.csv e nosso banco de dados é dado pelo arquivo Tables.kt.
 
 ## Manejo de Servidor e Base de Dados: PGADMIN v9.2
-- Estamos usando o PGAdmin para manejar os servidores e nossa database em PostgreSQL. 
+- Estamos usando o PGAdmin para manejar os servidores e nossa database, escrita em PostgreSQL. 
 - Nome do servidor: LichiaLocal
 - Port: 5432 (padrão para postgres)
 - Username: postgres (nome padrão)
@@ -78,5 +78,8 @@ Apenas mais um teste para checar como funciona o routing de páginas
 - Para ler corretamente esse output em JSON, precisamos recriar o arquivo Serialization.kt. Além disso, criamos uma classe dedicada a transferir dados de jogos entre o servidor e o cliente chamada GameDTO.kt e usamos as relações que ela define para realizar o mapeamento correto no arquivo GamesRoutes.kt, cuja função gameRoutes() é chamada por Application.kt para definir a rota para os jogos na página.
 
 
+## Uso de IA
+- Estamos usando o chatgpt, algumas vezes no seu próprio site, outras vezes através do plugin github copilot no IntelliJ Community Version.
+- Quando no contexto do IntelliJ, usamos o copilot v4.1 junto a um arquivo copilot-instructions.md. Criamos este arquivo seguindo [as direções dadas no próprio site do github](https://docs.github.com/en/copilot/concepts/about-customizing-github-copilot-chat-responses).
 
 
