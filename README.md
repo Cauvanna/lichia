@@ -65,7 +65,7 @@ O software deve ter as seguintes funcionalidades:
 - Username: postgres (nome padrão)
 - Senha: lichia1234 (não estamos preocupados com segurança ainda)
 
-## Páginas 
+## Páginas
 
 ### "/" ou root
 Por ora, é apenas uma página dizendo "Hello, Lichia!". Será usada como nossa página principal, mas melhor definirmos depois, pois precisaremos de todos os conteúdos mais específicos prontos primeiro.
@@ -77,6 +77,15 @@ Apenas mais um teste para checar como funciona o routing de páginas
 - Criada para realizar um primeiro acesso nosso banco de dados através do browser. Por ora, ela apenas exibe a lista de todos os jogos da nossa DB dados em formato JSON.
 - Para ler corretamente esse output em JSON, precisamos recriar o arquivo Serialization.kt. Além disso, criamos uma classe dedicada a transferir dados de jogos entre o servidor e o cliente chamada GameDTO.kt e usamos as relações que ela define para realizar o mapeamento correto no arquivo GamesRoutes.kt, cuja função gameRoutes() é chamada por Application.kt para definir a rota para os jogos na página.
 
+## Endpoints
+A seguir, listamos todos os endpoints de nosso servidor e qual sua função:
+
+### /login
+
+
+## POSTMAN: testando endpoints
+- Usamos o postman para testar gets e posts no backend. 
+- De forma geral, fazemos com que ele se conecte a URLs específicas de nosso servidor (endpoints) para receber ou enviar jsons.
 
 ## Uso de IA
 - Estamos usando o chatgpt, algumas vezes no seu próprio site, outras vezes através do plugin github copilot no IntelliJ Community Version.

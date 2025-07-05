@@ -34,3 +34,5 @@ por vezes usando arquivos de rotas encontrados no diretório
 `src/main/kotlin/br/com/lichia/routes/`.
 - Os datamodels principais são Usuario, Game e Registro.
 - Usamos Exposed para criar uma camada de abstração do banco de dados.
+
+Lembre-se que a função .select() do Exposed foi deprecada, então use a função .selectAll() no lugar dela.

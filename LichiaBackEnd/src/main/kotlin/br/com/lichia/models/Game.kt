@@ -9,8 +9,7 @@ open class Game(
     val anoLancamento: Int,
     // Mudamos de lista de consoles para apenas console de lançamento, pois infelizmente não temos dados suficientes
     val consoleLancamento: String? = "",
-    var listaRegistros: MutableList<Registro> = mutableListOf(), // Lista de registros
-    var listaResenhas: MutableList<Resenha> = mutableListOf(), // Lista de resenhas
+    var listaAvaliacoes: MutableList<Avaliacao> = mutableListOf(), // Lista unificada de avaliações
     @Transient // Evita serialização desse campo, para não ser persistido no banco de dados
     var listaDesejantes: MutableList<Usuario> = mutableListOf(), // Lista de usuários que desejam o jogo
     // Mais alguns atributos adicionados para obter os dados desejados do .csv base do CORGIS
@@ -40,7 +39,7 @@ open class Game(
     }
 
     fun mediaNotas(): Double {
-        val notasValidas = listaRegistros.mapNotNull { it.nota } // Filtra apenas notas não nulas
+        val notasValidas = listaAvaliacoes.mapNotNull { it.nota } // Filtra apenas notas não nulas
         return if (notasValidas.isNotEmpty()) {
             notasValidas.average() // Calcula a média apenas das notas válidas
         } else {

@@ -1,4 +1,3 @@
-
 /*
 * Este arquivo define os objetos Table para o banco de dados usando Exposed. Os objetos descrevem
 * como as tabelas do PostgreSQL serão estruturadas e como devem se comportar.
@@ -37,6 +36,7 @@ object Usuarios : Table("users") {
     val visibilidade = bool("visibilidade").default(true)
     val dataNascimento = date("data_nascimento")
     val dataCadastro = long("data_cadastro")
+    val logado = bool("logado").default(false)
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -54,4 +54,16 @@ object Desejos : Table("desejos") {
     val usuarioId = integer("usuario_id").references(Usuarios.id)
     val gameId = integer("game_id").references(Games.id)
     override val primaryKey = PrimaryKey(usuarioId, gameId)
+}
+
+// Tabela de avaliações de jogos feitas por usuários
+object Avaliacoes : Table("avaliacoes") {
+    val id = integer("id").autoIncrement()
+    val usuarioId = integer("usuario_id").references(Usuarios.id)
+    val gameId = integer("game_id").references(Games.id)
+    val nota = double("nota").nullable()
+    val resenha = text("resenha").default("")
+    val visibilidade = bool("visibilidade").default(true)
+    val data = date("data") // Substitui o campo timestamp por data
+    override val primaryKey = PrimaryKey(id)
 }
