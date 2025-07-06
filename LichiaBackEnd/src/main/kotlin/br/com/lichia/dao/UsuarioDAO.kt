@@ -15,7 +15,7 @@ object UsuarioDAO {
                         senha = it[Usuarios.senha],
                         visibilidade = it[Usuarios.visibilidade],
                         dataNascimento = it[Usuarios.dataNascimento],
-                        dataCadastro = it[Usuarios.dataCadastro],
+                        dataCadastro = it[Usuarios.dataCadastro], // Agora é LocalDate
                         id = it[Usuarios.id]
                     )
                 }

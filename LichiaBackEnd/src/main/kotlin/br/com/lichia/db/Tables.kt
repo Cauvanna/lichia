@@ -5,6 +5,7 @@
  */
 package br.com.lichia.database
 
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
 
@@ -35,7 +36,7 @@ object Usuarios : Table("users") {
     val senha = text("senha")
     val visibilidade = bool("visibilidade").default(true)
     val dataNascimento = date("data_nascimento")
-    val dataCadastro = long("data_cadastro")
+    val dataCadastro = date("data_cadastro") // Alterado para date
     val logado = bool("logado").default(false)
 
     override val primaryKey = PrimaryKey(id)
@@ -57,13 +58,12 @@ object Desejos : Table("desejos") {
 }
 
 // Tabela de avaliações de jogos feitas por usuários
-object Avaliacoes : Table("avaliacoes") {
-    val id = integer("id").autoIncrement()
+object Avaliacoes : IntIdTable("avaliacoes") {
+    // O campo id já é criado automaticamente!
     val usuarioId = integer("usuario_id").references(Usuarios.id)
     val gameId = integer("game_id").references(Games.id)
     val nota = double("nota").nullable()
     val resenha = text("resenha").default("")
     val visibilidade = bool("visibilidade").default(true)
     val data = date("data") // Substitui o campo timestamp por data
-    override val primaryKey = PrimaryKey(id)
 }

@@ -5,6 +5,7 @@ package br.com.lichia.routes
     * Vamos começar listando os jogos para que o frontend possa obtê-los do banco de dados.
  */
 
+import br.com.lichia.database.Desejos
 import br.com.lichia.database.Games
 import br.com.lichia.database.Usuarios
 import io.ktor.server.response.*
@@ -43,6 +44,44 @@ data class PaginaDeJogoErroResponse(
     val mensagem: String
 )
 
+@Serializable
+data class RequestListaDeDesejantesRequest(
+    val comunicacao: String,
+    val usr_solicitante: String = "",
+    val id_usr_solicitante: Int = 0,
+    val token: String = "",
+    val id_game: Int
+)
+
+@Serializable
+data class RequestListaDeDesejantesErroResponse(
+    val comunicacao: String,
+    val mensagem: String
+)
+
+@Serializable
+data class RequestListaDeAvaliacoesRequest(
+    val comunicacao: String,
+    val id_jogo: Int,
+    val username: String = "",
+    val token: String = ""
+)
+
+@Serializable
+data class AvaliacaoListaResponseItem(
+    val autor: String,
+    val id_autor: Int,
+    val nota: Double?,
+    val data_criacao: String,
+    val resenha: String
+)
+
+@Serializable
+data class RequestListaDeAvaliacoesErroResponse(
+    val comunicacao: String,
+    val mensagem: String
+)
+
 fun Route.gameRoutes() {
     route("/games") {
         get {
@@ -69,30 +108,44 @@ fun Route.gameRoutes() {
             call.respond(gameList)
         }
     }
-    route("/lista-games-para-usuario") {
+    route("/request-lista-games") {
         post {
             val req = call.receive<ListaGamesParaUsuarioRequest>()
-            // Checa se o token está no formato esperado
+            // Se for visitante (username e token vazios), retorna a lista sem checagem
+            if (req.username.isBlank() && req.token.isBlank()) {
+                val gameList = transaction {
+                    Games.selectAll().map {
+                        GameDTO(
+                            id = it[Games.id],
+                            titulo = it[Games.titulo],
+                            genero = it[Games.genero],
+                            anoLancamento = it[Games.anoLancamento],
+                            consoleLancamento = it[Games.consoleLancamento],
+                            ehHandheld = it[Games.ehHandheld],
+                            maxJogadores = it[Games.maxJogadores],
+                            temOnline = it[Games.temOnline],
+                            publisher = it[Games.publisher],
+                            temSequencia = it[Games.temSequencia],
+                            precoUsual = it[Games.precoUsual],
+                            duracaoMainStoryAverage = it[Games.duracaoMainStoryAverage],
+                            duracaoMainStoryExtras = it[Games.duracaoMainStoryExtras],
+                            duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage]
+                        )
+                    }
+                }
+                call.respond(gameList)
+                return@post
+            }
+            // Se não for visitante, checa o token
             val tokenEsperado = "user-${req.username}-logado"
             if (req.token != tokenEsperado) {
                 call.respond(ListaGamesParaUsuarioErroResponse(
-                    comunicacao = "lista de jogos",
+                    comunicacao = "request-lista-games",
                     mensagem = "token de login de usuario invalido"
                 ))
                 return@post
             }
-            // Checa se o usuário está logado no banco
-            val usuarioLogado = transaction {
-                Usuarios.selectAll().where { (Usuarios.nome eq req.username) and (Usuarios.logado eq true) }.count() > 0
-            }
-            if (!usuarioLogado) {
-                call.respond(ListaGamesParaUsuarioErroResponse(
-                    comunicacao = "lista de jogos",
-                    mensagem = "usuario nao esta logado"
-                ))
-                return@post
-            }
-            // Se passou pelas validações, retorna a lista de jogos igual ao /games
+            // Se o token está correto, retorna a lista de jogos
             val gameList = transaction {
                 Games.selectAll().map {
                     GameDTO(
@@ -116,27 +169,51 @@ fun Route.gameRoutes() {
             call.respond(gameList)
         }
     }
-    route("/pagina-de-jogo") {
+    route("/request-pagina-de-game") {
         post {
             val req = call.receive<PaginaDeJogoRequest>()
+            // Se for visitante (username e token vazios), não checa token
+            if (req.username.isBlank() && req.token.isBlank()) {
+                val gameDTO = transaction {
+                    Games.selectAll().where { Games.id eq req.id_jogo }.singleOrNull()?.let {
+                        GameDTO(
+                            id = it[Games.id],
+                            titulo = it[Games.titulo],
+                            genero = it[Games.genero],
+                            anoLancamento = it[Games.anoLancamento],
+                            consoleLancamento = it[Games.consoleLancamento],
+                            ehHandheld = it[Games.ehHandheld],
+                            maxJogadores = it[Games.maxJogadores],
+                            temOnline = it[Games.temOnline],
+                            publisher = it[Games.publisher],
+                            temSequencia = it[Games.temSequencia],
+                            precoUsual = it[Games.precoUsual],
+                            duracaoMainStoryAverage = it[Games.duracaoMainStoryAverage],
+                            duracaoMainStoryExtras = it[Games.duracaoMainStoryExtras],
+                            duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage]
+                        )
+                    }
+                }
+                if (gameDTO == null) {
+                    call.respond(PaginaDeJogoErroResponse(
+                        comunicacao = "request-pagina-de-game",
+                        mensagem = "id_jogo nao encontrado"
+                    ))
+                    return@post
+                }
+                call.respond(gameDTO)
+                return@post
+            }
+            // Se não for visitante, checa apenas o token
             val tokenEsperado = "user-${req.username}-logado"
             if (req.token != tokenEsperado) {
                 call.respond(PaginaDeJogoErroResponse(
-                    comunicacao = "pagina-de-jogo",
+                    comunicacao = "request-pagina-de-game",
                     mensagem = "token de usuario invalido"
                 ))
                 return@post
             }
-            val usuarioLogado = transaction {
-                Usuarios.selectAll().where { (Usuarios.nome eq req.username) and (Usuarios.logado eq true) }.count() > 0
-            }
-            if (!usuarioLogado) {
-                call.respond(PaginaDeJogoErroResponse(
-                    comunicacao = "pagina-de-jogo",
-                    mensagem = "usuario nao esta logado"
-                ))
-                return@post
-            }
+            // Token válido, busca o jogo normalmente
             val gameDTO = transaction {
                 Games.selectAll().where { Games.id eq req.id_jogo }.singleOrNull()?.let {
                     GameDTO(
@@ -159,12 +236,112 @@ fun Route.gameRoutes() {
             }
             if (gameDTO == null) {
                 call.respond(PaginaDeJogoErroResponse(
-                    comunicacao = "pagina-de-jogo",
+                    comunicacao = "request-pagina-de-game",
                     mensagem = "id_jogo nao encontrado"
                 ))
                 return@post
             }
             call.respond(gameDTO)
+        }
+    }
+    route("/request-lista-de-desejantes") {
+        post {
+            val req = call.receive<RequestListaDeDesejantesRequest>()
+            val visitante = req.id_usr_solicitante == 0 || req.usr_solicitante.isBlank() || req.token.isBlank()
+            var resposta: Any? = null
+            transaction {
+                // 1. Checa se o game existe
+                val gameExiste = Games.selectAll().any { it[Games.id] == req.id_game }
+                if (!gameExiste) {
+                    resposta = RequestListaDeDesejantesErroResponse(
+                        comunicacao = "request-lista-de-desejantes",
+                        mensagem = "id de game inválido"
+                    )
+                    return@transaction
+                }
+                if (!visitante) {
+                    // 2. Checa se o usuário solicitante existe
+                    val usuarioSolicitante = Usuarios.selectAll().find { it[Usuarios.id] == req.id_usr_solicitante }
+                    if (usuarioSolicitante == null) {
+                        resposta = RequestListaDeDesejantesErroResponse(
+                            comunicacao = "request-lista-de-desejantes",
+                            mensagem = "id de usuário solicitante inválido"
+                        )
+                        return@transaction
+                    }
+                    // 3. Checa se o token é válido
+                    val tokenEsperado = "user-${req.usr_solicitante}-logado"
+                    if (req.token != tokenEsperado) {
+                        resposta = RequestListaDeDesejantesErroResponse(
+                            comunicacao = "request-lista-de-desejantes",
+                            mensagem = "token de login do solicitante inválido"
+                        )
+                        return@transaction
+                    }
+                }
+                // Busca todos os desejos para o game
+                val desejos = Desejos.selectAll().filter { it[Desejos.gameId] == req.id_game }
+                val listaUsuarios = desejos.mapNotNull { desejo ->
+                    val usuario = Usuarios.selectAll().find { it[Usuarios.id] == desejo[Desejos.usuarioId] }
+                    usuario?.let {
+                        br.com.lichia.routes.UsuarioListaResponseItem(
+                            id = it[Usuarios.id],
+                            nome = it[Usuarios.nome],
+                            senha = it[Usuarios.senha],
+                            visibilidade = it[Usuarios.visibilidade],
+                            data_cadastro = it[Usuarios.dataCadastro].toString(),
+                            data_nascimento = it[Usuarios.dataNascimento].toString(),
+                            logado = it[Usuarios.logado]
+                        )
+                    }
+                }
+                resposta = listaUsuarios
+            }
+            call.respond(resposta!!)
+        }
+    }
+    route("/request-lista-de-avaliacoes") {
+        post {
+            val req = call.receive<RequestListaDeAvaliacoesRequest>()
+            val visitante = req.username.isBlank() || req.token.isBlank()
+            var resposta: Any? = null
+            transaction {
+                // Checa se o jogo existe
+                val jogoExiste = Games.selectAll().any { it[Games.id] == req.id_jogo }
+                if (!jogoExiste) {
+                    resposta = RequestListaDeAvaliacoesErroResponse(
+                        comunicacao = "request-lista-de-avaliacoes",
+                        mensagem = "id de jogo inválido"
+                    )
+                    return@transaction
+                }
+                if (!visitante) {
+                    val tokenEsperado = "user-${req.username}-logado"
+                    if (req.token != tokenEsperado) {
+                        resposta = RequestListaDeAvaliacoesErroResponse(
+                            comunicacao = "request-lista-de-avaliacoes",
+                            mensagem = "token de login invalido"
+                        )
+                        return@transaction
+                    }
+                }
+                // Busca avaliações do jogo
+                val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { it[br.com.lichia.database.Avaliacoes.gameId] == req.id_jogo }
+                val listaAvaliacoes = avaliacoes.map { avaliacao ->
+                    val usuario = Usuarios.selectAll().find { it[Usuarios.id] == avaliacao[br.com.lichia.database.Avaliacoes.usuarioId] }
+                    AvaliacaoListaResponseItem(
+                        autor = usuario?.get(Usuarios.nome) ?: "",
+                        id_autor = usuario?.get(Usuarios.id) ?: -1,
+                        nota = avaliacao[br.com.lichia.database.Avaliacoes.nota],
+                        data_criacao = avaliacao[br.com.lichia.database.Avaliacoes.data].format(
+                            java.time.format.DateTimeFormatter.ofPattern("EEE-dd-MMM-yyyy").withLocale(java.util.Locale("pt", "BR"))
+                        ),
+                        resenha = avaliacao[br.com.lichia.database.Avaliacoes.resenha]
+                    )
+                }
+                resposta = listaAvaliacoes
+            }
+            call.respond(resposta!!)
         }
     }
 }

@@ -13,7 +13,7 @@ open class Usuario(
     private var senha: String,
     var visibilidade: Boolean = true, // Privacidade padrão é true (conta aberta)
     val dataNascimento: LocalDate,
-    val dataCadastro: Long = System.currentTimeMillis(), // Grava momento da criação
+    val dataCadastro: LocalDate = LocalDate.now(), // Agora usa LocalDate
     var listaSolicitacoes: MutableList<Usuario> = mutableListOf(), // Lista de solicitações de amizade
     var listaAmigos: MutableList<Usuario> = mutableListOf(), // Lista de amigos
     var listaGames: MutableList<Game> = mutableListOf(), // Lista de jogos
