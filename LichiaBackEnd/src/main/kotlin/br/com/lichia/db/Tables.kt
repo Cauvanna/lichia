@@ -37,3 +37,24 @@ object Users : Table("users") {
 
     override val primaryKey = PrimaryKey(id)
 }
+
+object Reviews : Table("reviews") {
+    val id = integer("id").autoIncrement()
+    val gameId = integer("game_id").references(Games.id)
+    val userId = integer("user_id").references(Users.id)
+    val rating = integer("rating") // 1-10 rating
+    val comment = text("comment")
+    val timestamp = long("timestamp")
+    val visibility = bool("visibility").default(true)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object Wishlists : Table("wishlists") {
+    val id = integer("id").autoIncrement()
+    val gameId = integer("game_id").references(Games.id)
+    val userId = integer("user_id").references(Users.id)
+    val timestamp = long("timestamp")
+
+    override val primaryKey = PrimaryKey(id)
+}
