@@ -27,16 +27,7 @@ fun Application.configureRouting() {
             call.respondText(text, type)
         }
 
-        get("/api/games") {
-            val games = lerGamesDoCSV() // ou buscar do banco
-            call.respond(games.map { game ->
-                mapOf(
-                    "titulo" to game.titulo,
-                    "genero" to game.genero,
-                    "ano" to game.anoLancamento
-                )
-            })
-        }
+        // Removed broken /api/games route - games are handled by gameRoutes()
 
         gameRoutes() // Rota para jogos, definida em `GamesRoutes.kt`
 
