@@ -37,3 +37,36 @@ object Users : Table("users") {
 
     override val primaryKey = PrimaryKey(id)
 }
+
+object Registros : Table("registros") {
+    val id = integer("id").autoIncrement()
+    val usuarioId = integer("usuario_id").references(Users.id)
+    val gameId = integer("game_id").references(Games.id)
+    val nota = integer("nota").nullable()
+    val jogou = bool("jogou").default(true)
+    val timestamp = long("timestamp")
+    val visibilidade = bool("visibilidade").default(true)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object Resenhas : Table("resenhas") {
+    val id = integer("id").autoIncrement()
+    val usuarioId = integer("usuario_id").references(Users.id)
+    val gameId = integer("game_id").references(Games.id)
+    val comentario = text("comentario")
+    val nota = integer("nota")
+    val timestamp = long("timestamp")
+    val visibilidade = bool("visibilidade").default(true)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object ListaDesejos : Table("lista_desejos") {
+    val id = integer("id").autoIncrement()
+    val usuarioId = integer("usuario_id").references(Users.id)
+    val gameId = integer("game_id").references(Games.id)
+    val dataAdicao = long("data_adicao")
+
+    override val primaryKey = PrimaryKey(id)
+}
