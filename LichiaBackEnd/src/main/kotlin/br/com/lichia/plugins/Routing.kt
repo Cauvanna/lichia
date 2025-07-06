@@ -27,18 +27,13 @@ fun Application.configureRouting() {
             call.respondText(text, type)
         }
 
+        // Legacy API endpoint - games are now served via /games route
         get("/api/games") {
-            val games = lerGamesDoCSV() // ou buscar do banco
-            call.respond(games.map { game ->
-                mapOf(
-                    "titulo" to game.titulo,
-                    "genero" to game.genero,
-                    "ano" to game.anoLancamento
-                )
-            })
+            call.respond(mapOf("message" to "Games are now available at /games"))
         }
 
         gameRoutes() // Rota para jogos, definida em `GamesRoutes.kt`
+        usuarioRoutes() // Rota para usuários, definida em `UsuarioRoutes.kt`
 
         // Static plugin. Tente acessar `/static/index.html` para ver o Task Manager
         staticResources("/static", "static")

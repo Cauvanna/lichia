@@ -6,6 +6,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.SchemaUtils
 import br.com.lichia.database.Games
 import br.com.lichia.database.Users
+import br.com.lichia.database.Registros
+import br.com.lichia.database.Resenhas
+import br.com.lichia.database.ListaDesejos
 
 fun Application.configureDatabases() {
     val config = environment.config.config("ktor.database")
@@ -22,7 +25,7 @@ fun Application.configureDatabases() {
         // do banco de dados (db) e não as que definimos no modelo (models). Usamos nomes
         // em inglês para diferenciar as tabelas do banco de dados das classes do modelo.
         // As tabelas são criadas apenas se não existirem, evitando erros de duplicação.
-        SchemaUtils.create(Games, Users)
+        SchemaUtils.create(Games, Users, Registros, Resenhas, ListaDesejos)
     }
 }
 
