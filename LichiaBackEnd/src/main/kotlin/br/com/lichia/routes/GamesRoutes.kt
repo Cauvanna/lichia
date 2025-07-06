@@ -14,6 +14,7 @@ import io.ktor.server.request.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import br.com.lichia.dto.GameDTO
+import br.com.lichia.dto.GameDetalhadoDTO
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.selectAll
 
@@ -81,6 +82,7 @@ data class RequestListaDeAvaliacoesErroResponse(
     val comunicacao: String,
     val mensagem: String
 )
+
 
 fun Route.gameRoutes() {
     route("/games") {
@@ -174,9 +176,14 @@ fun Route.gameRoutes() {
             val req = call.receive<PaginaDeJogoRequest>()
             // Se for visitante (username e token vazios), não checa token
             if (req.username.isBlank() && req.token.isBlank()) {
-                val gameDTO = transaction {
+                val gameDetalhadoDTO = transaction {
                     Games.selectAll().where { Games.id eq req.id_jogo }.singleOrNull()?.let {
-                        GameDTO(
+                        val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == it[Games.id] }
+                        val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == it[Games.id] && av[br.com.lichia.database.Avaliacoes.nota] != null }
+                        val notaMedia = if (avaliacoes.isNotEmpty()) {
+                            avaliacoes.map { av -> av[br.com.lichia.database.Avaliacoes.nota]!! }.average()
+                        } else 0.0
+                        GameDetalhadoDTO(
                             id = it[Games.id],
                             titulo = it[Games.titulo],
                             genero = it[Games.genero],
@@ -190,18 +197,20 @@ fun Route.gameRoutes() {
                             precoUsual = it[Games.precoUsual],
                             duracaoMainStoryAverage = it[Games.duracaoMainStoryAverage],
                             duracaoMainStoryExtras = it[Games.duracaoMainStoryExtras],
-                            duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage]
+                            duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage],
+                            quant_desejantes = quantDesejantes,
+                            nota_media = notaMedia
                         )
                     }
                 }
-                if (gameDTO == null) {
+                if (gameDetalhadoDTO == null) {
                     call.respond(PaginaDeJogoErroResponse(
                         comunicacao = "request-pagina-de-game",
                         mensagem = "id_jogo nao encontrado"
                     ))
                     return@post
                 }
-                call.respond(gameDTO)
+                call.respond(gameDetalhadoDTO)
                 return@post
             }
             // Se não for visitante, checa apenas o token
@@ -214,9 +223,14 @@ fun Route.gameRoutes() {
                 return@post
             }
             // Token válido, busca o jogo normalmente
-            val gameDTO = transaction {
+            val gameDetalhadoDTO = transaction {
                 Games.selectAll().where { Games.id eq req.id_jogo }.singleOrNull()?.let {
-                    GameDTO(
+                    val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == it[Games.id] }
+                    val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == it[Games.id] && av[br.com.lichia.database.Avaliacoes.nota] != null }
+                    val notaMedia = if (avaliacoes.isNotEmpty()) {
+                        avaliacoes.map { av -> av[br.com.lichia.database.Avaliacoes.nota]!! }.average()
+                    } else 0.0
+                    GameDetalhadoDTO(
                         id = it[Games.id],
                         titulo = it[Games.titulo],
                         genero = it[Games.genero],
@@ -230,18 +244,20 @@ fun Route.gameRoutes() {
                         precoUsual = it[Games.precoUsual],
                         duracaoMainStoryAverage = it[Games.duracaoMainStoryAverage],
                         duracaoMainStoryExtras = it[Games.duracaoMainStoryExtras],
-                        duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage]
+                        duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage],
+                        quant_desejantes = quantDesejantes,
+                        nota_media = notaMedia
                     )
                 }
             }
-            if (gameDTO == null) {
+            if (gameDetalhadoDTO == null) {
                 call.respond(PaginaDeJogoErroResponse(
                     comunicacao = "request-pagina-de-game",
                     mensagem = "id_jogo nao encontrado"
                 ))
                 return@post
             }
-            call.respond(gameDTO)
+            call.respond(gameDetalhadoDTO)
         }
     }
     route("/request-lista-de-desejantes") {

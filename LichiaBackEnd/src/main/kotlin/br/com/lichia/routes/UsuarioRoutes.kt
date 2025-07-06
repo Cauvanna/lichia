@@ -245,6 +245,24 @@ fun Route.userRoutes() {
         post {
             val request = call.receive<RegistroUsuarioRequest>()
 
+            // Checa tamanho mínimo do username e senha
+            if (request.username.length < 5) {
+                call.respond(RegistroUsuarioResponse(
+                    comunicacao = "registro-usuario",
+                    registrado = false,
+                    mensagem = "O nome de usuário deve ter pelo menos 5 caracteres."
+                ))
+                return@post
+            }
+            if (request.senha.length < 5) {
+                call.respond(RegistroUsuarioResponse(
+                    comunicacao = "registro-usuario",
+                    registrado = false,
+                    mensagem = "A senha deve ter pelo menos 5 caracteres."
+                ))
+                return@post
+            }
+
             // Checamos se usuário com mesmo nome já existe
             val userExists = transaction {
                 Usuarios.selectAll().any { it[Usuarios.nome] == request.username }
