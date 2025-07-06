@@ -198,6 +198,20 @@ class UsuarioTest {
     }
 
     @Test
+    fun `criaRegistro nao permite criar registro duplicado para o mesmo jogo` (){
+        val usuario = Usuario(nome = "Caue", idade = 27, senha ="senha123")
+        val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
+        
+        // Primeira criação deve ser bem-sucedida
+        assertTrue(usuario.criaRegistro(game))
+        assertEquals(1, game.listaRegistros.size)
+        
+        // Segunda criação deve falhar
+        assertFalse(usuario.criaRegistro(game))
+        assertEquals(1, game.listaRegistros.size) // Deve permanecer apenas um registro
+    }
+
+    @Test
     fun `removeRegistro bem sucedido remove objeto registro da lista de registros do usuario` (){
         val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
         val usuario = Usuario(nome = "Caue", idade = 27, senha ="senha123")
@@ -206,6 +220,23 @@ class UsuarioTest {
         usuario.listaGames = mutableListOf(game)
         assertTrue(usuario.removeRegistro(game))
         assertTrue(game.listaRegistros.isEmpty()) // Verifica se registro foi removido do game
+        assertTrue(usuario.listaGames.isEmpty()) // Verifica se game foi removido da lista de games do usuario
+    }
+
+    @Test
+    fun `removeRegistro remove game da lista de games do usuario quando remove registro`() {
+        val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
+        val usuario = Usuario(nome = "Caue", idade = 27, senha ="senha123")
+        
+        // Usuario cria um registro
+        assertTrue(usuario.criaRegistro(game))
+        assertTrue(usuario.listaGames.contains(game))
+        assertTrue(game.listaRegistros.isNotEmpty())
+        
+        // Usuario remove o registro
+        assertTrue(usuario.removeRegistro(game))
+        assertFalse(usuario.listaGames.contains(game)) // Game deve ser removido da lista
+        assertTrue(game.listaRegistros.isEmpty()) // Registro deve ser removido do game
     }
 
     @Test
@@ -226,6 +257,24 @@ class UsuarioTest {
         assertFalse(usuario.removeRegistro(game))
     }
 
+    @Test
+    fun `removeRegistro nao remove registro de outro usuario mesmo que o game esteja na lista de games`() {
+        val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
+        val usuario1 = Usuario(nome = "Caue", idade = 27, senha ="senha123")
+        val usuario2 = Usuario(nome = "Gi", idade = 20, senha ="senha321")
+        
+        // Usuario2 cria um registro para o game
+        val registro = Registro(usuario = usuario2, game = game)
+        game.listaRegistros = mutableListOf(registro)
+        
+        // Usuario1 adiciona o game à sua lista mas não tem registro
+        usuario1.listaGames = mutableListOf(game)
+        
+        // Usuario1 tenta remover o registro - deve falhar
+        assertFalse(usuario1.removeRegistro(game))
+        assertTrue(game.listaRegistros.contains(registro)) // Registro de usuario2 deve permanecer
+    }
+
     /****************************************************************************************************************/
     // Interações Usuario-Resenha
 
@@ -234,10 +283,24 @@ class UsuarioTest {
         val usuario = Usuario(nome = "Caue", idade = 27, senha ="senha123")
         val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
         assertTrue(usuario.criaResenha(game, "Fenomenal!", 10))
-        assertFalse(game.listaResenhas.isEmpty()) // Verifica registro foi adicionado à lista de registros do game
+        assertFalse(game.listaResenhas.isEmpty()) // Verifica resenha foi adicionada à lista de resenhas do game
         assertTrue(game.listaResenhas[0].visibilidade == usuario.visibilidade) // Verifica se foi criado com a mesma visibilidade do usuario
         assertTrue(usuario.listaGames[0] == game) // Verifica se game foi adicionado à lista de games do usuario
 
+    }
+
+    @Test
+    fun `criaResenha nao permite criar resenha duplicada para o mesmo jogo` (){
+        val usuario = Usuario(nome = "Caue", idade = 27, senha ="senha123")
+        val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
+        
+        // Primeira criação deve ser bem-sucedida
+        assertTrue(usuario.criaResenha(game, "Fenomenal!", 10))
+        assertEquals(1, game.listaResenhas.size)
+        
+        // Segunda criação deve falhar
+        assertFalse(usuario.criaResenha(game, "Ainda melhor!", 9))
+        assertEquals(1, game.listaResenhas.size) // Deve permanecer apenas uma resenha
     }
 
     @Test
@@ -267,6 +330,24 @@ class UsuarioTest {
         val resenha= Resenha(usuario = usuario, game = game, "Fenomenal!", nota = 10)
         assertTrue(game.listaResenhas.isEmpty()) // Verifica se lista de resenhas do game está vazia
         assertFalse(usuario.removeResenha(game))
+    }
+
+    @Test
+    fun `removeResenha nao remove resenha de outro usuario mesmo que o game esteja na lista de games`() {
+        val game = Game(titulo = "Zelda", genero = "Aventura", anoLancamento = 2023)
+        val usuario1 = Usuario(nome = "Caue", idade = 27, senha ="senha123")
+        val usuario2 = Usuario(nome = "Gi", idade = 20, senha ="senha321")
+        
+        // Usuario2 cria uma resenha para o game
+        val resenha = Resenha(usuario = usuario2, game = game, "Excelente!", nota = 9)
+        game.listaResenhas = mutableListOf(resenha)
+        
+        // Usuario1 adiciona o game à sua lista mas não tem resenha
+        usuario1.listaGames = mutableListOf(game)
+        
+        // Usuario1 tenta remover a resenha - deve falhar
+        assertFalse(usuario1.removeResenha(game))
+        assertTrue(game.listaResenhas.contains(resenha)) // Resenha de usuario2 deve permanecer
     }
 
     /****************************************************************************************************************/
