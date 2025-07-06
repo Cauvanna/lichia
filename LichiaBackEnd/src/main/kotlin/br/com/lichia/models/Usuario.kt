@@ -127,29 +127,41 @@ open class Usuario(
     // Interações Usuario-Registro
 
     fun criaRegistro(game: Game) : Boolean {
+        // Verifica se usuário já tem registro para este jogo
+        if (game.listaRegistros.any { it.usuario == this && it.game == game }) {
+            println("Usuário $nome já possui um registro para o jogo ${game.titulo}.")
+            return false
+        }
+        
         val registro = Registro(usuario = this, game = game, jogou = true)
         // se usuário tem conta aberta, seus registros são públicos por padrão
         registro.visibilidade = this.visibilidade
 
         game.listaRegistros.add(registro)
-        this.listaGames.add(game)
+        
+        // Adiciona o game à lista apenas se não estiver já presente
+        if (game !in this.listaGames) {
+            this.listaGames.add(game)
+        }
+        
         println("Registro criado para o jogo ${game.titulo}.")
         return true
     }
 
     fun removeRegistro(game: Game) : Boolean {
         // se game está na lista de games do usuário
-        val game = this.listaGames.find { it == game }
-        if (game != null) {
+        val foundGame = this.listaGames.find { it == game }
+        if (foundGame != null) {
 
-            // se o registro está na lista de registros do jogo
-            val registro = game.listaRegistros.find { it.game == game }
+            // se o registro está na lista de registros do jogo e pertence a este usuario
+            val registro = foundGame.listaRegistros.find { it.game == foundGame && it.usuario == this }
             if (registro != null) {
-                game.listaRegistros.remove(registro)
-                println("Registro removido para o jogo ${game.titulo}.")
+                foundGame.listaRegistros.remove(registro)
+                this.listaGames.remove(foundGame)
+                println("Registro removido para o jogo ${foundGame.titulo}.")
                 return true
             } else {
-                println("Nenhum registro encontrado para o jogo ${game.titulo}.")
+                println("Nenhum registro encontrado para o jogo ${foundGame.titulo}.")
                 return false
             }
         } else {
@@ -167,30 +179,41 @@ open class Usuario(
         nota: Int
     ) : Boolean
     {
+        // Verifica se usuário já tem resenha para este jogo
+        if (game.listaResenhas.any { it.usuario == this && it.game == game }) {
+            println("Usuário $nome já possui uma resenha para o jogo ${game.titulo}.")
+            return false
+        }
+        
         val resenha = Resenha(usuario = this, game = game, comentario = comentario, nota = nota)
 
         // se usuário tem conta aberta, suas resenhas também são públicas por padrão
         resenha.visibilidade = this.visibilidade
 
         game.listaResenhas.add(resenha)
-        this.listaGames.add(game)
-        println("Registro criado para o jogo ${game.titulo}.")
+        
+        // Adiciona o game à lista apenas se não estiver já presente
+        if (game !in this.listaGames) {
+            this.listaGames.add(game)
+        }
+        
+        println("Resenha criada para o jogo ${game.titulo}.")
         return true
     }
 
     fun removeResenha(game: Game) : Boolean {
         // se game está na lista de games do usuário
-        val game = this.listaGames.find { it == game }
-        if (game != null) {
+        val foundGame = this.listaGames.find { it == game }
+        if (foundGame != null) {
 
-            // se a resenha está na lista de resenhas do jogo
-            val registro = game.listaResenhas.find { it.game == game }
-            if (registro != null) {
-                game.listaResenhas.remove(registro)
-                println("Registro removido para o jogo ${game.titulo}.")
+            // se a resenha está na lista de resenhas do jogo e pertence a este usuario
+            val resenha = foundGame.listaResenhas.find { it.game == foundGame && it.usuario == this }
+            if (resenha != null) {
+                foundGame.listaResenhas.remove(resenha)
+                println("Resenha removida para o jogo ${foundGame.titulo}.")
                 return true
             } else {
-                println("Nenhum registro encontrado para o jogo ${game.titulo}.")
+                println("Nenhuma resenha encontrada para o jogo ${foundGame.titulo}.")
                 return false
             }
         } else {
