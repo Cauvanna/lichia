@@ -44,4 +44,48 @@ class GameTest {
         Assertions.assertEquals(8.5, game.mediaNotas())
     }
 
+    @Test
+    fun testMediaNotasComListaVazia() {
+        val game = Game("Jogo Sem Registros", "Aventura", 2023)
+        
+        Assertions.assertEquals(0.0, game.mediaNotas())
+    }
+
+    @Test
+    fun testMediaNotasComApenasNotasNulas() {
+        val game = Game("Jogo Só com Nulos", "Puzzle", 2020)
+        val usuario1 = Usuario("Alice", 25, "senha123")
+        val usuario2 = Usuario("Bob", 30, "senha456")
+        
+        game.listaRegistros.add(Registro(usuario1, game)) // Sem nota
+        game.listaRegistros.add(Registro(usuario2, game)) // Sem nota
+        
+        Assertions.assertEquals(0.0, game.mediaNotas())
+    }
+
+    @Test
+    fun testQuantidadeDesejantesComListaVazia() {
+        val game = Game("Jogo Não Desejado", "Horror", 2019)
+        
+        Assertions.assertEquals(0, game.quantidadeDesejantes())
+    }
+
+    @Test
+    fun testToStringContemInformacoesCorretas() {
+        val game = Game("Super Mario Bros", "Plataforma", 1985, "NES")
+        val usuario = Usuario("Mario", 35, "senha123")
+        
+        game.listaDesejantes.add(usuario)
+        game.listaRegistros.add(Registro(usuario, game, nota = 10))
+        
+        val resultado = game.toString()
+        
+        Assertions.assertTrue(resultado.contains("Super Mario Bros"))
+        Assertions.assertTrue(resultado.contains("Plataforma"))
+        Assertions.assertTrue(resultado.contains("1985"))
+        Assertions.assertTrue(resultado.contains("NES"))
+        Assertions.assertTrue(resultado.contains("quantidadeDesejos=1"))
+        Assertions.assertTrue(resultado.contains("mediaNotas=10.0"))
+    }
+
 }
