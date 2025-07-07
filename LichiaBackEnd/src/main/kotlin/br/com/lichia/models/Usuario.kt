@@ -1,24 +1,36 @@
 package br.com.lichia.models
 
+// Para guardar data de nascimento
+import java.time.LocalDate
+import java.time.Period
+
+import br.com.lichia.dao.DesejoDAO
+import br.com.lichia.dao.GameDAO
+
 open class Usuario(
     val nome: String,
     // (*) Colocar limite mínimo? Ideia: usar classificação indicativa de jogos para mostrar ou não conforme idade
-    val idade: Int,
-    var senha: String,
+    private var senha: String,
     var visibilidade: Boolean = true, // Privacidade padrão é true (conta aberta)
-    val dataCadastro: Long = System.currentTimeMillis(), // Grava momento da criação
+    val dataNascimento: LocalDate,
+    val dataCadastro: LocalDate = LocalDate.now(), // Agora usa LocalDate
     var listaSolicitacoes: MutableList<Usuario> = mutableListOf(), // Lista de solicitações de amizade
     var listaAmigos: MutableList<Usuario> = mutableListOf(), // Lista de amigos
     var listaGames: MutableList<Game> = mutableListOf(), // Lista de jogos
     // var listaRegistros: MutableList<Registro> = mutableListOf(), // Lista de registros
     // var listaResenhas: MutableList<Resenha> = mutableListOf(), // Lista de resenhas
-    var listaDesejos: MutableList<Game> = mutableListOf() // Lista de desejos
+    @Transient // Evita serialização desse campo, para não ser persistido no banco de dados
+    var listaDesejos: MutableList<Game> = mutableListOf(), // Lista de desejos
+    val id: Int = -1, // ID único do usuário (inicializado como -1 para indicar que ainda não foi definido, pode ser gerado automaticamente posteriormente
 )
 {
 
-    // Interações Usuario-Self
+    // Obtém a idade do usuário com base na data de nascimento
+    val idade: Int
+        get() = Period.between(dataNascimento, LocalDate.now()).years
 
-    fun autenticar(senha: String) =
+    // Interações Usuario-Self
+    fun autenticar(senha: String) : Boolean =
         this.senha == senha
 
     fun alterarSenha(senha: String, senhaNova: String) : Boolean {
@@ -100,8 +112,10 @@ open class Usuario(
     // Interações Usuario-Game
 
     fun adicionaDesejo(game: Game) : Boolean{
-        if (game !in listaDesejos) {
-            listaDesejos.add(game)
+        val sucesso = DesejoDAO.adicionarDesejo(this, game)
+
+        if (sucesso) {
+            listaDesejos.add(game)  // só atualiza se deu certo no banco
             game.listaDesejantes.add(this)
             println("$nome adicionou jogo ${game.titulo} adicionado à lista de desejos.")
             return true
@@ -112,7 +126,8 @@ open class Usuario(
     }
 
     fun removeDesejo(game: Game) : Boolean {
-        if (game in listaDesejos) {
+        val sucesso = DesejoDAO.removerDesejo(this, game)
+        if (sucesso) {
             listaDesejos.remove(game)
             game.listaDesejantes.remove(this)
             println("$nome removeu jogo ${game.titulo} removido da lista de desejos.")
@@ -123,87 +138,50 @@ open class Usuario(
         }
     }
 
+    // Usar essa função para syncar no login/load de um usuário da DB
+    fun carregarDesejosDoBanco() {
+        val gameIds = DesejoDAO.obterDesejosDoUsuario(this)
+        // Usamos função que busca os games pelo ID
+        this.listaDesejos = gameIds.mapNotNull { id -> GameDAO.getGameById(id) }.toMutableList()
+    }
+
+
     /****************************************************************************************************************/
-    // Interações Usuario-Registro
+    // Interações Usuario-Avaliacao (unificado)
 
-    fun criaRegistro(game: Game) : Boolean {
-        val registro = Registro(usuario = this, game = game, jogou = true)
-        // se usuário tem conta aberta, seus registros são públicos por padrão
-        registro.visibilidade = this.visibilidade
-
-        game.listaRegistros.add(registro)
-        this.listaGames.add(game)
-        println("Registro criado para o jogo ${game.titulo}.")
+    fun criaAvaliacao(game: Game, nota: Int? = null, resenha: String = "", jogou: Boolean = true): Boolean {
+        val avaliacao = Avaliacao(usuario = this, game = game, nota = nota, visibilidade = this.visibilidade, resenha = resenha)
+        game.listaAvaliacoes.add(avaliacao)
+        if (game !in this.listaGames) {
+            this.listaGames.add(game)
+        }
+        println("Avaliação criada para o jogo ${game.titulo}.")
         return true
     }
 
-    fun removeRegistro(game: Game) : Boolean {
-        // se game está na lista de games do usuário
-        val game = this.listaGames.find { it == game }
-        if (game != null) {
-
-            // se o registro está na lista de registros do jogo
-            val registro = game.listaRegistros.find { it.game == game }
-            if (registro != null) {
-                game.listaRegistros.remove(registro)
-                println("Registro removido para o jogo ${game.titulo}.")
-                return true
-            } else {
-                println("Nenhum registro encontrado para o jogo ${game.titulo}.")
-                return false
-            }
+    fun removeAvaliacao(game: Game): Boolean {
+        val avaliacao = game.listaAvaliacoes.find { it.usuario == this }
+        return if (avaliacao != null) {
+            game.listaAvaliacoes.remove(avaliacao)
+            println("Avaliação removida para o jogo ${game.titulo}.")
+            true
         } else {
-            println("Jogo não encontrado na lista de games de $nome.")
-            return false
+            println("Nenhuma avaliação encontrada para o jogo ${game.titulo}.")
+            false
         }
     }
 
-    /****************************************************************************************************************/
-    // Interações Usuario-Resenha
-
-    fun criaResenha(
-        game: Game,
-        comentario: String,
-        nota: Int
-    ) : Boolean
-    {
-        val resenha = Resenha(usuario = this, game = game, comentario = comentario, nota = nota)
-
-        // se usuário tem conta aberta, suas resenhas também são públicas por padrão
-        resenha.visibilidade = this.visibilidade
-
-        game.listaResenhas.add(resenha)
-        this.listaGames.add(game)
-        println("Registro criado para o jogo ${game.titulo}.")
-        return true
-    }
-
-    fun removeResenha(game: Game) : Boolean {
-        // se game está na lista de games do usuário
-        val game = this.listaGames.find { it == game }
-        if (game != null) {
-
-            // se a resenha está na lista de resenhas do jogo
-            val registro = game.listaResenhas.find { it.game == game }
-            if (registro != null) {
-                game.listaResenhas.remove(registro)
-                println("Registro removido para o jogo ${game.titulo}.")
-                return true
-            } else {
-                println("Nenhum registro encontrado para o jogo ${game.titulo}.")
-                return false
-            }
-        } else {
-            println("Jogo não encontrado na lista de games de $nome.")
-            return false
-        }
-    }
+    // Remover métodos antigos de registro e resenha
+    // fun criaRegistro(game: Game) ...
+    // fun removeRegistro(game: Game) ...
+    // fun criaResenha(game: Game, comentario: String, nota: Int) ...
+    // fun removeResenha(game: Game) ...
     /****************************************************************************************************************/
     // Utilitários
 
     // to string precisa de override
     override fun toString(): String {
-        return "Usuario(nome='$nome', idade=$idade)"
+        return "Usuario(nome='$nome', visibilidade='${visibilidade}, dataNascimento=$dataNascimento)"
     }
 }
 
@@ -212,9 +190,9 @@ open class Usuario(
 
 class Admin(
     nome: String,
-    idade: Int,
-    senha: String
-) : Usuario(nome, idade, senha) {
+    senha: String,
+    dataNascimento: LocalDate
+) : Usuario(nome, senha, true, dataNascimento) {
     fun excluirUsuario(usuario: Usuario) {
         TODO("Not yet implemented")
     }
@@ -225,23 +203,12 @@ class Admin(
         TODO("Not yet implemented")
     }
 
-    fun apagaRegistroQualquer(
-        registro: Registro
-    ): Boolean
-    {
-        val game = registro.game
-        registro.game.listaRegistros.remove(registro)
-        println("Registro removido para o jogo ${game.titulo} do usuário ${registro.usuario}.")
-        return true
-    }
-
-    fun apagaResenhaQualquer(
-        resenha: Resenha
-    ): Boolean
-    {
-        val game = resenha.game
-        resenha.game.listaResenhas.remove(resenha)
-        println("Registro removido para o jogo ${game.titulo} do usuário ${resenha.usuario}.")
+    fun apagaAvaliacaoQualquer(
+        avaliacao: Avaliacao
+    ): Boolean {
+        val game = avaliacao.game
+        game.listaAvaliacoes.remove(avaliacao)
+        println("Avaliação removida para o jogo ${game.titulo} do usuário ${avaliacao.usuario}.")
         return true
     }
 }

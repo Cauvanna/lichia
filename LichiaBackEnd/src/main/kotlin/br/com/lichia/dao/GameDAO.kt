@@ -1,25 +1,22 @@
-package br.com.lichia.routes
-
 /*
-    * GamesRoutes.kt é um arquivo que define as rotas relacionadas aos jogos no servidor Ktor.
-    * Vamos começar listando os jogos para que o frontend possa obtê-los do banco de dados.
+ * DAO = Data Access Object
+ * Para obter Games do banco de dados
  */
 
-import br.com.lichia.database.Games
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
-import br.com.lichia.dto.GameDTO
+package br.com.lichia.dao
 
-fun Route.gameRoutes() {
-    route("/games") {
-        get {
-            val gameList = transaction {
-                Games.selectAll().map {
-                    GameDTO(
-                        id = it[Games.id],
+import br.com.lichia.database.Games
+import br.com.lichia.models.Game
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
+
+object GameDAO {
+    fun getGameById(id: Int): Game? {
+        return transaction {
+            Games.selectAll().where { Games.id eq id }
+                .mapNotNull {
+                    Game(
+                        id = it[Games.id].value,
                         titulo = it[Games.titulo],
                         genero = it[Games.genero],
                         anoLancamento = it[Games.anoLancamento],
@@ -35,8 +32,8 @@ fun Route.gameRoutes() {
                         duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage]
                     )
                 }
-            }
-            call.respond(gameList)
+                .singleOrNull()
         }
     }
 }
+

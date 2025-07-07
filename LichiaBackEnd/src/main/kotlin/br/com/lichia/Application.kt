@@ -1,15 +1,14 @@
-package br.com.lichia.plugins
-import br.com.lichia.importer.importGamesFromCSV
-//import br.com.lichia.models.PostgresTaskRepository
+package br.com.lichia
+
 import io.ktor.server.application.*
-//import br.com.lichia.repositories.*
+import br.com.lichia.plugins.*
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
 fun Application.module() {
-//    val repository = PostgresTaskRepository()
+
     configureSerialization()
     configureDatabases()
 
@@ -19,4 +18,6 @@ fun Application.module() {
 //    importGamesFromCSV("/home/caue/Área_de_Trabalho/BCC/5øSEMESTRE/ES/Projeto/Lichia/" +
 //            "LichiaBackEnd/DataSets/ArquivoOriginalCorgis/videoGames.csv")
     configureRouting()
+
+
 }

@@ -27,18 +27,13 @@ fun Application.configureRouting() {
             call.respondText(text, type)
         }
 
-        get("/api/games") {
-            val games = lerGamesDoCSV() // ou buscar do banco
-            call.respond(games.map { game ->
-                mapOf(
-                    "titulo" to game.titulo,
-                    "genero" to game.genero,
-                    "ano" to game.anoLancamento
-                )
-            })
-        }
 
-        gameRoutes() // Rota para jogos, definida em `GamesRoutes.kt`
+        // Página para REGISTRO de usuários e LOGIN
+        userRoutes()
+
+        // routing da página /games
+        gameRoutes() // Rota para jogos, definida em `GameRoutes.kt`
+
 
         // Static plugin. Tente acessar `/static/index.html` para ver o Task Manager
         staticResources("/static", "static")
@@ -49,5 +44,7 @@ fun Application.configureRouting() {
         * Acesse o endereço `/content/sample.html` para ver o conteúdo do arquivo.
         */
         staticResources("/content", "mycontent")
+
+
     }
 }
