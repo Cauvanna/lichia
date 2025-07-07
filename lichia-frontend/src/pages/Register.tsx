@@ -25,27 +25,31 @@ const Register: React.FC = () => {
 
     // Validation
     if (!formData.username || !formData.password || !formData.birthDate) {
-      setError('Please fill in all required fields');
+      setError('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('As senhas não coincidem');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
     // Validate birth date
     const birthDate = new Date(formData.birthDate);
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
     if (age < 13) {
-      setError('You must be at least 13 years old to register');
+      setError('Você deve ter pelo menos 13 anos para se registrar');
       return;
     }
 
@@ -55,14 +59,14 @@ const Register: React.FC = () => {
       formData.birthDate,
       formData.isPublic
     );
-    
+
     if (result.success) {
-      setSuccess(result.message || 'Registration successful!');
+      setSuccess(result.message || 'Cadastro realizado com sucesso!');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } else {
-      setError(result.message || 'Registration failed');
+      setError(result.message || 'Falha no cadastro');
     }
   };
 
@@ -80,14 +84,14 @@ const Register: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-2">
+            <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
               <GamepadIcon className="w-8 h-8 text-white" />
             </div>
             <span className="text-white text-2xl font-bold">Lichia</span>
           </Link>
-          
-          <h1 className="text-3xl font-bold text-white mb-2">Join GameTracker</h1>
-          <p className="text-gray-400">Create your account to start tracking games</p>
+
+          <h1 className="text-3xl font-bold text-white mb-2">Junte-se à Lichia</h1>
+          <p className="text-gray-400">Crie sua conta para começar a organizar seus jogos</p>
         </div>
 
         {/* Register Form */}
@@ -107,7 +111,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                Username *
+                Usuário *
               </label>
               <input
                 type="text"
@@ -115,15 +119,15 @@ const Register: React.FC = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                placeholder="Choose a unique username"
+                className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from transition-colors"
+                placeholder="Escolha um nome de usuário único"
                 disabled={isLoading}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password *
+                Senha *
               </label>
               <div className="relative">
                 <input
@@ -132,8 +136,8 @@ const Register: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                  placeholder="Create a secure password"
+                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from transition-colors"
+                  placeholder="Crie uma senha segura"
                   disabled={isLoading}
                 />
                 <button
@@ -149,7 +153,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                Confirm Password *
+                Confirmar Senha *
               </label>
               <div className="relative">
                 <input
@@ -158,8 +162,8 @@ const Register: React.FC = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                  placeholder="Confirm your password"
+                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from transition-colors"
+                  placeholder="Confirme sua senha"
                   disabled={isLoading}
                 />
                 <button
@@ -175,7 +179,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="birthDate" className="block text-sm font-medium text-gray-300 mb-2">
-                Birth Date *
+                Data de Nascimento *
               </label>
               <div className="relative">
                 <input
@@ -185,7 +189,7 @@ const Register: React.FC = () => {
                   value={formData.birthDate}
                   onChange={handleChange}
                   max={new Date().toISOString().split('T')[0]}
-                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from transition-colors"
                   disabled={isLoading}
                 />
                 <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
@@ -203,23 +207,23 @@ const Register: React.FC = () => {
                   disabled={isLoading}
                 />
                 <div className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
-                  formData.isPublic 
-                    ? 'border-purple-500 bg-purple-500/10' 
+                  formData.isPublic
+                    ? 'border-lichia-from bg-lichia-from/10'
                     : 'border-gray-600 bg-gray-700'
                 }`}>
                   {formData.isPublic ? (
-                    <Shield className="w-5 h-5 text-purple-400" />
+                    <Shield className="w-5 h-5 text-lichia-from" />
                   ) : (
                     <ShieldOff className="w-5 h-5 text-gray-400" />
                   )}
                   <div className="flex-1">
                     <div className="text-white font-medium">
-                      {formData.isPublic ? 'Public Profile' : 'Private Profile'}
+                      {formData.isPublic ? 'Perfil Público' : 'Perfil Privado'}
                     </div>
                     <div className="text-gray-400 text-sm">
-                      {formData.isPublic 
-                        ? 'Other users can view your profile and activity'
-                        : 'Only you can see your profile and activity'
+                      {formData.isPublic
+                        ? 'Outros usuários podem ver seu perfil e atividades'
+                        : 'Apenas você pode ver seu perfil e atividades'
                       }
                     </div>
                   </div>
@@ -230,22 +234,22 @@ const Register: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-lichia-from hover:bg-lichia-to disabled:bg-lichia-from/50 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <UserPlus className="w-5 h-5" />
               )}
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? 'Criando Conta...' : 'Criar Conta'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              Already have an account?{' '}
-              <Link to="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
-                Sign in
+              Já tem uma conta?{' '}
+              <Link to="/login" className="text-lichia-from hover:text-lichia-to font-medium transition-colors">
+                Entrar
               </Link>
             </p>
           </div>
@@ -258,7 +262,7 @@ const Register: React.FC = () => {
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            Voltar para o Início
           </Link>
         </div>
       </div>

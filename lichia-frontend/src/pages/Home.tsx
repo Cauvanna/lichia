@@ -32,7 +32,7 @@ const Home: React.FC = () => {
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Descubra Sua Próxima
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 ml-3">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-lichia-from to-lichia-to ml-3">
                 Aventura Gaming
               </span>
             </h1>
@@ -44,7 +44,7 @@ const Home: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => navigate('/register')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <UserPlus className="w-5 h-5" />
                   Criar Conta
@@ -69,7 +69,7 @@ const Home: React.FC = () => {
               className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-colors text-left group"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
                   <Gamepad2 className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-white">Explorar Games</h3>
@@ -84,7 +84,7 @@ const Home: React.FC = () => {
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                    <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
                       <Star className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-white">Minha Library</h3>
@@ -97,7 +97,7 @@ const Home: React.FC = () => {
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                    <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
                       <TrendingUp className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-white">Meu Painel</h3>
@@ -112,12 +112,12 @@ const Home: React.FC = () => {
         {/* Featured Games */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-2">
+            <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-white">Games em Destaque</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredGames.map((game) => (
               <GameCard
@@ -135,12 +135,12 @@ const Home: React.FC = () => {
             {/* Personalized Recommendations */}
             <section>
               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg p-2">
+                <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-white">Recomendados</h2>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {recommendedGames.map((game) => (
                   <GameCard
@@ -155,12 +155,12 @@ const Home: React.FC = () => {
             {/* Recent Reviews */}
             <section>
               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-lg p-2">
+                <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
                   <Star className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-white">Avaliações Recentes</h2>
               </div>
-              
+
               <div className="space-y-4">
                 {topReviews.map((review) => (
                   <ReviewCard
@@ -179,7 +179,7 @@ const Home: React.FC = () => {
             {/* Activity Feed */}
             <section>
               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-2">
+                <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-white">Atividade Recente</h2>

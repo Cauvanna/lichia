@@ -14,6 +14,8 @@ const Profile: React.FC = () => {
   }
 
   const formatDate = (dateString: string) => {
+    // Adicionando verificação para evitar erro com datas inválidas
+    if (!dateString) return 'Data inválida';
     return new Date(dateString).toLocaleDateString('pt-BR', {
       year: 'numeric',
       month: 'long',
@@ -30,15 +32,15 @@ const Profile: React.FC = () => {
             <img
               src={user.avatar}
               alt={user.displayName}
-              className="w-32 h-32 rounded-full object-cover ring-4 ring-purple-500"
+              className="w-32 h-32 rounded-full object-cover ring-4 ring-lichia-from"
             />
-            
+
             <div className="text-center md:text-left flex-1">
               <h1 className="text-3xl font-bold text-white mb-2">{user.displayName}</h1>
               <p className="text-gray-400 text-lg mb-4">@{user.username}</p>
-              
+
               <p className="text-gray-300 mb-6 max-w-2xl">{user.bio}</p>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <div className="text-xl font-bold text-white">Nome</div>
@@ -69,7 +71,7 @@ const Profile: React.FC = () => {
                   <div className="text-gray-400 text-sm">Nascimento</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400">
                 <Calendar className="w-4 h-4" />
                 <span>Membro desde {formatDate(user.dataCadastro)}</span>
@@ -77,15 +79,15 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <button
-            onClick={() => navigate('/user/1/reviews')}
+            onClick={() => navigate(`/user/${user.id}/reviews`)} // Corrigido para usar ID do usuário logado
             className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-colors text-left group"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-lg p-3 group-hover:scale-110 transition-transform">
+              <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Star className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-white">Histórico de Avaliações</h3>
@@ -98,7 +100,7 @@ const Profile: React.FC = () => {
             className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-colors text-left group"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-3 group-hover:scale-110 transition-transform">
+              <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Heart className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-white">Lista de Desejos</h3>

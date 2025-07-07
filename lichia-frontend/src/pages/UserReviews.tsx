@@ -20,7 +20,7 @@ const UserReviews: React.FC = () => {
           <h1 className="text-2xl font-bold text-white mb-4">Usuário não encontrado</h1>
           <button 
             onClick={() => navigate('/')}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Voltar ao Início
           </button>
@@ -82,7 +82,7 @@ const UserReviews: React.FC = () => {
             <p className="text-gray-400 mb-6">Este usuário ainda não fez avaliações.</p>
             <button
               onClick={() => navigate(`/user/${id}`)}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-6 rounded-lg transition-colors"
             >
               Voltar ao Perfil
             </button>

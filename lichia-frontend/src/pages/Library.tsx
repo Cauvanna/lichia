@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockGames } from '../data/mockData';
-import { Library as LibraryIcon, Search, Filter, Grid, List, Star, Play, Check, Clock, Plus } from 'lucide-react';
+import { Library as LibraryIcon, Search, Grid, List, Star, Play, Check, Clock, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GameCard from '../components/ui/GameCard';
 
@@ -33,21 +33,22 @@ const Library: React.FC = () => {
   // Filter and sort games
   const filteredGames = libraryGames
     .filter(game => {
-      const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        if (!game || !game.title || !game.developer) return false;
+        const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            game.developer.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || game.playStatus === filterStatus;
-      return matchesSearch && matchesStatus;
+        const matchesStatus = filterStatus === 'all' || game.playStatus === filterStatus;
+        return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'title':
           return a.title.localeCompare(b.title);
         case 'rating':
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         case 'userRating':
           return (b.userRating || 0) - (a.userRating || 0);
         case 'releaseYear':
-          return b.releaseYear - a.releaseYear;
+          return (b.releaseYear || 0) - (a.releaseYear || 0);
         default:
           return 0;
       }
@@ -73,9 +74,9 @@ const Library: React.FC = () => {
     if (viewMode === 'list') {
       const statusOption = statusOptions.find(s => s.value === game.playStatus);
       const StatusIcon = statusOption?.icon;
-      
+
       return (
-        <div 
+        <div
           className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer group"
           onClick={() => handleGameClick(game.id)}
         >
@@ -85,25 +86,25 @@ const Library: React.FC = () => {
               alt={game.title}
               className="w-16 h-20 object-cover rounded"
             />
-            
+
             <div className="flex-1 min-w-0">
               <h3 className="text-white font-bold text-lg mb-1 truncate">{game.title}</h3>
               <p className="text-gray-400 text-sm mb-2">{game.developer} • {game.releaseYear}</p>
-              
+
               <div className="flex items-center gap-4 mb-2">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                   <span className="text-white font-medium">{game.rating}</span>
                 </div>
-                
+
                 {game.userRating && (
                   <div className="flex items-center gap-1">
-                    <span className="text-purple-400 text-sm">Sua nota:</span>
-                    <Star className="w-4 h-4 text-purple-400 fill-purple-400" />
-                    <span className="text-purple-400 font-medium">{game.userRating}</span>
+                    <span className="text-lichia-from text-sm">Sua nota:</span>
+                    <Star className="w-4 h-4 text-lichia-from fill-lichia-from" />
+                    <span className="text-lichia-from font-medium">{game.userRating}</span>
                   </div>
                 )}
-                
+
                 {StatusIcon && (
                   <div className={`flex items-center gap-1 ${statusOption?.color}`}>
                     <StatusIcon className="w-4 h-4" />
@@ -111,7 +112,7 @@ const Library: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               <p className="text-gray-400 text-sm line-clamp-2">{game.description}</p>
             </div>
           </div>
@@ -135,7 +136,7 @@ const Library: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-lg p-3">
+            <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3">
               <LibraryIcon className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -143,7 +144,7 @@ const Library: React.FC = () => {
               <p className="text-gray-400">Seus jogos e avaliações</p>
             </div>
           </div>
-          
+
           <div className="text-gray-400">
             {filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'} na sua library
           </div>
@@ -158,7 +159,7 @@ const Library: React.FC = () => {
             </div>
             <div className="text-2xl font-bold text-white">{stats.playing}</div>
           </div>
-          
+
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Check className="w-5 h-5 text-green-400" />
@@ -166,7 +167,7 @@ const Library: React.FC = () => {
             </div>
             <div className="text-2xl font-bold text-white">{stats.completed}</div>
           </div>
-          
+
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Plus className="w-5 h-5 text-yellow-400" />
@@ -174,7 +175,7 @@ const Library: React.FC = () => {
             </div>
             <div className="text-2xl font-bold text-white">{stats.plan_to_play}</div>
           </div>
-          
+
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-red-400" />
@@ -186,35 +187,33 @@ const Library: React.FC = () => {
 
         {/* Filters and Controls */}
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
-            <div className="relative">
+            <div className="relative col-span-1 md:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Buscar na library..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from"
               />
             </div>
 
-            {/* Status Filter */}
+            {/* Status & Sort Filters */}
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
-
-            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from"
             >
               <option value="title">Título</option>
               <option value="rating">Nota Média</option>
@@ -223,12 +222,12 @@ const Library: React.FC = () => {
             </select>
 
             {/* View Mode */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-end">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded ${
                   viewMode === 'grid'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-lichia-from text-white'
                     : 'bg-gray-700 text-gray-400 hover:text-white'
                 }`}
               >
@@ -238,7 +237,7 @@ const Library: React.FC = () => {
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded ${
                   viewMode === 'list'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-lichia-from text-white'
                     : 'bg-gray-700 text-gray-400 hover:text-white'
                 }`}
               >
@@ -251,8 +250,8 @@ const Library: React.FC = () => {
         {/* Games Grid/List */}
         {filteredGames.length > 0 ? (
           <div className={`${
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
               : 'space-y-4'
           }`}>
             {filteredGames.map((game) => (
@@ -267,7 +266,7 @@ const Library: React.FC = () => {
                 {searchTerm || filterStatus !== 'all' ? 'Nenhum game encontrado' : 'Sua library está vazia'}
               </h3>
               <p className="text-gray-400 mb-6">
-                {searchTerm || filterStatus !== 'all' 
+                {searchTerm || filterStatus !== 'all'
                   ? 'Tente ajustar sua busca ou filtros'
                   : 'Comece adicionando jogos à sua library'
                 }
@@ -275,7 +274,7 @@ const Library: React.FC = () => {
               {!searchTerm && filterStatus === 'all' && (
                 <button
                   onClick={() => navigate('/explore')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                  className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-6 rounded-lg transition-colors"
                 >
                   Explorar Games
                 </button>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockGames, mockUsers } from '../data/mockData';
-import { Heart, Search, Filter, Grid, List, Star, Trash2, ArrowLeft } from 'lucide-react';
+import { Heart, Search, Grid, List, Star, Trash2, ArrowLeft } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import GameCard from '../components/ui/GameCard';
@@ -32,9 +32,9 @@ const Wishlist: React.FC = () => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Usuário não encontrado</h1>
-          <button 
+          <button
             onClick={() => navigate('/')}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Voltar ao Início
           </button>
@@ -44,27 +44,28 @@ const Wishlist: React.FC = () => {
   }
 
   // Filter games that are in the wishlist
-  const wishlistGames = mockGames.filter(game => wishlistItems.includes(game.id));
+  const wishlistGames = mockGames.filter(game => game && wishlistItems.includes(game.id));
 
   // Get all unique genres for filtering
-  const allGenres = Array.from(new Set(mockGames.flatMap(game => game.genres)));
+  const allGenres = Array.from(new Set(mockGames.flatMap(game => game.genres || [])));
 
   // Filter and sort games
   const filteredGames = wishlistGames
     .filter(game => {
-      const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        if (!game || !game.title || !game.developer) return false;
+        const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            game.developer.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGenre = filterGenre === 'all' || game.genres.includes(filterGenre);
-      return matchesSearch && matchesGenre;
+        const matchesGenre = filterGenre === 'all' || (game.genres && game.genres.includes(filterGenre));
+        return matchesSearch && matchesGenre;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'title':
           return a.title.localeCompare(b.title);
         case 'rating':
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         case 'releaseYear':
-          return b.releaseYear - a.releaseYear;
+          return (b.releaseYear || 0) - (a.releaseYear || 0);
         case 'dateAdded':
         default:
           return 0; // In a real app, this would sort by actual date added
@@ -85,7 +86,7 @@ const Wishlist: React.FC = () => {
   const WishlistGameCard: React.FC<{ game: any }> = ({ game }) => {
     if (viewMode === 'list') {
       return (
-        <div 
+        <div
           className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer group"
           onClick={() => handleGameClick(game.id)}
         >
@@ -95,17 +96,17 @@ const Wishlist: React.FC = () => {
               alt={game.title}
               className="w-16 h-20 object-cover rounded"
             />
-            
+
             <div className="flex-1 min-w-0">
               <h3 className="text-white font-bold text-lg mb-1 truncate">{game.title}</h3>
               <p className="text-gray-400 text-sm mb-2">{game.developer} • {game.releaseYear}</p>
-              
+
               <div className="flex items-center gap-4 mb-2">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                   <span className="text-white font-medium">{game.rating}</span>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-1">
                   {game.genres.slice(0, 3).map((genre: string, index: number) => (
                     <span key={index} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">
@@ -114,10 +115,10 @@ const Wishlist: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
+
               <p className="text-gray-400 text-sm line-clamp-2">{game.description}</p>
             </div>
-            
+
             {isOwnWishlist && (
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -173,7 +174,7 @@ const Wishlist: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-3">
+            <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3">
               <Heart className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -185,7 +186,7 @@ const Wishlist: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="text-gray-400">
             {filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'} na lista de desejos
           </div>
@@ -193,16 +194,16 @@ const Wishlist: React.FC = () => {
 
         {/* Filters and Controls */}
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
-            <div className="relative">
+            <div className="relative col-span-1 md:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Buscar na lista..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from"
               />
             </div>
 
@@ -210,7 +211,7 @@ const Wishlist: React.FC = () => {
             <select
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
-              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from"
             >
               <option value="all">Todos os Gêneros</option>
               {allGenres.map((genre) => (
@@ -222,7 +223,7 @@ const Wishlist: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from"
             >
               <option value="dateAdded">Data de Adição</option>
               <option value="title">Título</option>
@@ -231,12 +232,12 @@ const Wishlist: React.FC = () => {
             </select>
 
             {/* View Mode */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-end">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded ${
                   viewMode === 'grid'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-lichia-from text-white'
                     : 'bg-gray-700 text-gray-400 hover:text-white'
                 }`}
               >
@@ -246,7 +247,7 @@ const Wishlist: React.FC = () => {
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded ${
                   viewMode === 'list'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-lichia-from text-white'
                     : 'bg-gray-700 text-gray-400 hover:text-white'
                 }`}
               >
@@ -259,8 +260,8 @@ const Wishlist: React.FC = () => {
         {/* Games Grid/List */}
         {filteredGames.length > 0 ? (
           <div className={`${
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
               : 'space-y-4'
           }`}>
             {filteredGames.map((game) => (
@@ -275,9 +276,9 @@ const Wishlist: React.FC = () => {
                 {searchTerm || filterGenre !== 'all' ? 'Nenhum game encontrado' : 'Lista de desejos vazia'}
               </h3>
               <p className="text-gray-400 mb-6">
-                {searchTerm || filterGenre !== 'all' 
+                {searchTerm || filterGenre !== 'all'
                   ? 'Tente ajustar sua busca ou filtros'
-                  : isOwnWishlist 
+                  : isOwnWishlist
                     ? 'Comece adicionando jogos à sua lista de desejos'
                     : 'Este usuário ainda não adicionou jogos à lista de desejos'
                 }
@@ -285,7 +286,7 @@ const Wishlist: React.FC = () => {
               {!searchTerm && filterGenre === 'all' && isOwnWishlist && (
                 <button
                   onClick={() => navigate('/explore')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                  className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-6 rounded-lg transition-colors"
                 >
                   Explorar Games
                 </button>

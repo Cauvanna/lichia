@@ -18,16 +18,16 @@ const Login: React.FC = () => {
     setError('');
 
     if (!formData.username || !formData.password) {
-      setError('Please fill in all fields');
+      setError('Por favor, preencha todos os campos');
       return;
     }
 
     const result = await login(formData.username, formData.password);
-    
+
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.message || 'Login failed');
+      setError(result.message || 'Login falhou');
     }
   };
 
@@ -44,14 +44,14 @@ const Login: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-2">
+            <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
               <GamepadIcon className="w-8 h-8 text-white" />
             </div>
             <span className="text-white text-2xl font-bold">Lichia</span>
           </Link>
-          
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-400">Sign in to your account to continue</p>
+
+          <h1 className="text-3xl font-bold text-white mb-2">Bem-vindo de volta</h1>
+          <p className="text-gray-400">Faça login na sua conta para continuar</p>
         </div>
 
         {/* Login Form */}
@@ -65,7 +65,7 @@ const Login: React.FC = () => {
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                Username
+                Usuário
               </label>
               <input
                 type="text"
@@ -73,15 +73,15 @@ const Login: React.FC = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                placeholder="Enter your username"
+                className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from transition-colors"
+                placeholder="Digite seu usuário"
                 disabled={isLoading}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
+                Senha
               </label>
               <div className="relative">
                 <input
@@ -90,8 +90,8 @@ const Login: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                  placeholder="Enter your password"
+                  className="w-full bg-gray-700 text-white px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from transition-colors"
+                  placeholder="Digite sua senha"
                   disabled={isLoading}
                 />
                 <button
@@ -108,22 +108,22 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-lichia-from hover:bg-lichia-to disabled:bg-lichia-from/50 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <LogIn className="w-5 h-5" />
               )}
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
-                Sign up
+              Não tem uma conta?{' '}
+              <Link to="/register" className="text-lichia-from hover:text-lichia-to font-medium transition-colors">
+                Cadastre-se
               </Link>
             </p>
           </div>
@@ -136,7 +136,7 @@ const Login: React.FC = () => {
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            Voltar para o Início
           </Link>
         </div>
       </div>

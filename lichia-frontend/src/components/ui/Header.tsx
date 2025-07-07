@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Search, User, Menu, X, Home, Library, Heart, LogOut, LogIn, UserPlus, Gamepad2 } from 'lucide-react';
+import { Search, User, Menu, X, Library, Heart, LogOut, LogIn, UserPlus, Gamepad2 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
+import lichiaLogoUrl from '../../assets/lichia.png';
+
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,11 +35,9 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-2">
-              <Library className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-white text-xl font-bold">GameTracker</span>
-          </Link>
+            <img src={lichiaLogoUrl} alt="Lichia Logo" className="w-8 h-8"/>
+            <span className="text-white text-xl font-bold">Lichia</span>
+        </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -47,13 +47,13 @@ const Header: React.FC = () => {
                 to={item.path}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors relative ${
                   isActivePath(item.path)
-                    ? 'bg-purple-500 text-white'
+                    ? 'bg-lichia-from text-white' // Cor alterada
                     : 'text-gray-300 hover:text-white hover:bg-gray-800'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>
-                {item.badge && item.badge > 0 && (
+                {item.badge != null && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {item.badge}
                   </span>
@@ -69,10 +69,10 @@ const Header: React.FC = () => {
               <input
                 type="text"
                 placeholder="Buscar games..."
-                className="bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-64"
+                className="bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from w-64" // Cor alterada
               />
             </div>
-            
+
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
                 <Link
@@ -80,7 +80,7 @@ const Header: React.FC = () => {
                   className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 rounded-lg p-2 transition-colors"
                 >
                   <img
-                    src={user?.avatar || 'https://images.pexels.com/photos/1040160/pexels-photo-1040160.jpeg?auto=compress&cs=tinysrgb&w=150'}
+                    src={user?.avatar || 'https://via.placeholder.com/150'}
                     alt={user?.displayName}
                     className="w-6 h-6 rounded-full object-cover"
                   />
@@ -105,7 +105,7 @@ const Header: React.FC = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                  className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2" // Cor alterada
                 >
                   <UserPlus className="w-4 h-4" />
                   Registro
@@ -133,14 +133,14 @@ const Header: React.FC = () => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors relative ${
                     isActivePath(item.path)
-                      ? 'bg-purple-500 text-white'
+                      ? 'bg-lichia-from text-white' // Cor alterada
                       : 'text-gray-300 hover:text-white hover:bg-gray-800'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <item.icon className="w-5 h-5" />
                   <span>{item.label}</span>
-                  {item.badge && item.badge > 0 && (
+                   {item.badge != null && item.badge > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {item.badge}
                     </span>
@@ -148,7 +148,7 @@ const Header: React.FC = () => {
                 </Link>
               ))}
             </div>
-            
+
             <div className="pt-4 pb-3 border-t border-gray-800">
               <div className="px-2">
                 <div className="relative mb-3">
@@ -156,10 +156,10 @@ const Header: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Buscar games..."
-                    className="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lichia-from" // Cor alterada
                   />
                 </div>
-                
+
                 {isAuthenticated ? (
                   <div className="space-y-2">
                     <Link
@@ -168,7 +168,7 @@ const Header: React.FC = () => {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <img
-                        src={user?.avatar || 'https://images.pexels.com/photos/1040160/pexels-photo-1040160.jpeg?auto=compress&cs=tinysrgb&w=150'}
+                        src={user?.avatar || 'https://via.placeholder.com/150'}
                         alt={user?.displayName}
                         className="w-5 h-5 rounded-full object-cover"
                       />
@@ -194,7 +194,7 @@ const Header: React.FC = () => {
                     </Link>
                     <Link
                       to="/register"
-                      className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-lichia-from text-white hover:bg-lichia-to transition-colors" // Cor alterada
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <UserPlus className="w-5 h-5" />

@@ -18,7 +18,7 @@ const GameWishers: React.FC = () => {
           <h1 className="text-2xl font-bold text-white mb-4">Game não encontrado</h1>
           <button 
             onClick={() => navigate('/')}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Voltar ao Início
           </button>
@@ -72,18 +72,18 @@ const GameWishers: React.FC = () => {
                     alt={user.displayName}
                     className="w-16 h-16 rounded-full object-cover"
                   />
-                  
+
                   <div className="flex-1">
                     <h3 className="text-white font-bold text-lg mb-1">{user.displayName}</h3>
                     <p className="text-gray-400 mb-2">@{user.username}</p>
                     <p className="text-gray-300 text-sm">{user.bio}</p>
                   </div>
-                  
+
                   <div className="text-center">
                     <div className="text-white font-bold">{user.gamesPlayed}</div>
                     <div className="text-gray-400 text-sm">Games</div>
                   </div>
-                  
+
                   <div className="text-center">
                     <div className="text-white font-bold">{user.followers}</div>
                     <div className="text-gray-400 text-sm">Seguidores</div>
@@ -99,7 +99,7 @@ const GameWishers: React.FC = () => {
             <p className="text-gray-400 mb-6">Nenhum usuário adicionou este jogo à lista de desejos.</p>
             <button
               onClick={() => navigate(`/game/${id}`)}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-6 rounded-lg transition-colors"
             >
               Voltar ao Game
             </button>

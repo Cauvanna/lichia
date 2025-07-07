@@ -29,7 +29,7 @@ const GameDetail: React.FC = () => {
           <h1 className="text-2xl font-bold text-white mb-4">Game não encontrado</h1>
           <button 
             onClick={() => navigate('/')}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Voltar ao Início
           </button>
@@ -90,36 +90,36 @@ const GameDetail: React.FC = () => {
               className="w-full max-w-sm mx-auto rounded-lg shadow-xl"
             />
           </div>
-          
+
           <div className="lg:col-span-2">
             <h1 className="text-4xl font-bold text-white mb-4">{game.title}</h1>
-            
+
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center gap-1">
                 <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                 <span className="text-white font-medium text-lg">{game.rating}</span>
                 <span className="text-gray-400">({gameReviews.length} avaliações)</span>
               </div>
-              
+
               <div className="flex items-center gap-1 text-gray-400">
                 <Calendar className="w-4 h-4" />
                 <span>{game.releaseYear}</span>
               </div>
-              
+
               <div className="flex items-center gap-1 text-gray-400">
                 <Users className="w-4 h-4" />
                 <span>{game.developer}</span>
               </div>
             </div>
-            
+
             <div className="flex flex-wrap gap-2 mb-6">
               {game.genres.map((genre, index) => (
-                <span key={index} className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
+                <span key={index} className="bg-lichia-from text-white px-3 py-1 rounded-full text-sm">
                   {genre}
                 </span>
               ))}
             </div>
-            
+
             <div className="flex flex-wrap gap-2 mb-6">
               {game.platforms.map((platform, index) => (
                 <span key={index} className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm flex items-center gap-1">
@@ -128,9 +128,9 @@ const GameDetail: React.FC = () => {
                 </span>
               ))}
             </div>
-            
+
             <p className="text-gray-300 leading-relaxed mb-6">{game.description}</p>
-            
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4 mb-6">
               <select
@@ -142,7 +142,7 @@ const GameDetail: React.FC = () => {
                   }
                   setPlayStatus(e.target.value);
                 }}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 <option value="">Adicionar à Library</option>
                 {statusOptions.map((option) => (
@@ -151,28 +151,28 @@ const GameDetail: React.FC = () => {
                   </option>
                 ))}
               </select>
-              
-              <button 
+
+              <button
                 onClick={handleWishlistToggle}
                 className={`font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center gap-2 ${
                   isWishlisted
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-gray-700 hover:bg-gray-600 text-white hover:bg-red-600'
+                    ? 'bg-lichia-from hover:bg-lichia-to text-white'
+                    : 'bg-gray-700 hover:bg-gray-600 text-white'
                 }`}
               >
                 <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
-                {isWishlisted ? 'Remover da Lista de Desejos' : 'Adicionar à Lista de Desejos'}
+                {isWishlisted ? 'Na Lista de Desejos' : 'Adicionar aos Desejos'}
               </button>
-              
-              <button 
+
+              <button
                 onClick={handleReviewClick}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
                 Criar Avaliação
               </button>
             </div>
-            
+
             {/* Rating */}
             <div className="bg-gray-800 rounded-lg p-4">
               <h3 className="text-white font-semibold mb-3">Avaliar este jogo</h3>
@@ -198,7 +198,7 @@ const GameDetail: React.FC = () => {
               </div>
               {!isAuthenticated && (
                 <p className="text-gray-400 text-sm mt-2">
-                  <button onClick={() => navigate('/login')} className="text-purple-400 hover:text-purple-300">
+                  <button onClick={() => navigate('/login')} className="text-lichia-from hover:text-lichia-to">
                     Faça login
                   </button> para avaliar este jogo
                 </p>
@@ -206,7 +206,7 @@ const GameDetail: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Screenshots */}
         {game.screenshots && game.screenshots.length > 0 && (
           <section className="mb-8">
@@ -218,7 +218,7 @@ const GameDetail: React.FC = () => {
                   src={screenshot}
                   alt={`${game.title} screenshot ${index + 1}`}
                   className={`rounded-lg cursor-pointer transition-all hover:scale-105 ${
-                    selectedScreenshot === index ? 'ring-2 ring-purple-500' : ''
+                    selectedScreenshot === index ? 'ring-2 ring-lichia-from' : ''
                   }`}
                   onClick={() => setSelectedScreenshot(index)}
                 />
@@ -226,7 +226,7 @@ const GameDetail: React.FC = () => {
             </div>
           </section>
         )}
-        
+
         {/* Quick Links */}
         <section className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -235,20 +235,20 @@ const GameDetail: React.FC = () => {
               className="bg-gray-800 hover:bg-gray-700 rounded-lg p-4 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <Heart className="w-6 h-6 text-red-400" />
+                <Heart className="w-6 h-6 text-lichia-from" />
                 <div>
                   <h3 className="text-white font-semibold">Lista de Desejantes</h3>
                   <p className="text-gray-400 text-sm">Veja quem deseja este jogo</p>
                 </div>
               </div>
             </button>
-            
+
             <button
               onClick={() => navigate(`/game/${id}/reviews`)}
               className="bg-gray-800 hover:bg-gray-700 rounded-lg p-4 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <MessageCircle className="w-6 h-6 text-blue-400" />
+                <MessageCircle className="w-6 h-6 text-lichia-from" />
                 <div>
                   <h3 className="text-white font-semibold">Todas as Avaliações</h3>
                   <p className="text-gray-400 text-sm">{gameReviews.length} avaliações</p>

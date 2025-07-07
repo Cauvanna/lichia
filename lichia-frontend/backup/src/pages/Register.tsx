@@ -83,10 +83,10 @@ const Register: React.FC = () => {
             <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-2">
               <GamepadIcon className="w-8 h-8 text-white" />
             </div>
-            <span className="text-white text-2xl font-bold">GameTracker</span>
+            <span className="text-white text-2xl font-bold">Lichia</span>
           </Link>
           
-          <h1 className="text-3xl font-bold text-white mb-2">Join GameTracker</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Join Lichia</h1>
           <p className="text-gray-400">Create your account to start tracking games</p>
         </div>
 
