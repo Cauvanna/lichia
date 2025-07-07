@@ -2,6 +2,9 @@ Sempre responda em português brasileiro.
 
 Sempre comece qualquer uma de suas respostas com "Olá, Lichia!".
 
+Sempre que possível, realize os imports necessários no começo de um arquivo que estiver editando,
+para evitar ter que importar manualmente uma função ou objeto toda vez que for usá-lo.
+
 Lembre-se do objetivo geral deste repositório: 
 Criar um software que funcione como uma rede social de videogames. 
 Basicamente como um letterbox, mas para videogames.

@@ -11,8 +11,8 @@ import org.jetbrains.exposed.sql.javatime.date
 
 // As tabelas a seguir usam o Exposed para definir a estrutura do banco de dados em SQL.
 
-object Games : Table("games") {
-    val id = integer("id").autoIncrement()
+object Games : IntIdTable("games") {
+    // id já é criado automaticamente pelo IntIdTable
     val titulo = text("titulo")
     val genero = text("genero").nullable()
     val anoLancamento = integer("ano_lancamento")
@@ -26,8 +26,7 @@ object Games : Table("games") {
     val duracaoMainStoryAverage = double("duracao_main_story_avg")
     val duracaoMainStoryExtras = double("duracao_main_story_extras_avg")
     val duracaoCompletionistAverage = double("duracao_completionist_avg")
-
-    override val primaryKey = PrimaryKey(id)
+    // Não precisa mais definir o primaryKey manualmente
 }
 
 object Usuarios : Table("users") {

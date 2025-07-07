@@ -3,6 +3,7 @@ package br.com.lichia.routes
 import br.com.lichia.database.Desejos
 import br.com.lichia.database.Games
 import br.com.lichia.database.Usuarios
+import br.com.lichia.database.Avaliacoes
 import br.com.lichia.dto.GameDTO
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -23,22 +24,6 @@ import java.time.LocalDate
 /******************************************************************************************************************/
 // Data classes para requisições e respostas de operações sobre usuários. Todos envolvem um REQUEST a
 // ser enviado pelo frontend e uma RESPONSE a ser enviada de volta pelo backend.
-
-@Serializable
-data class RegistroUsuarioRequest(
-    val comunicacao: String, // novo campo para identificar a operação
-    val username: String,
-    val senha: String,
-    val dataNascimento: String, // Vamos parsear como LocalDate no backend
-    val visibilidade: Boolean
-)
-
-@Serializable
-data class RegistroUsuarioResponse(
-    val comunicacao: String, // novo campo para identificar a operação
-    val registrado: Boolean,
-    val mensagem: String
-)
 
 @Serializable
 data class LoginRequest(
@@ -236,64 +221,27 @@ data class RequestHistoricoAvaliacoesErroResponse(
     val mensagem: String
 )
 
+@Serializable
+data class RegistroUsuarioRequest(
+    val comunicacao: String, // novo campo para identificar a operação
+    val username: String,
+    val senha: String,
+    val dataNascimento: String, // Vamos parsear como LocalDate no backend
+    val visibilidade: Boolean
+)
+
+@Serializable
+data class RegistroUsuarioResponse(
+    val comunicacao: String, // novo campo para identificar a operação
+    val registrado: Boolean,
+    val mensagem: String
+)
+
 /******************************************************************************************************************/
 // ROTAS DOS ENDPOINTS //
 /******************************************************************************************************************/
 
 fun Route.userRoutes() {
-    route("/registro") {
-        post {
-            val request = call.receive<RegistroUsuarioRequest>()
-
-            // Checa tamanho mínimo do username e senha
-            if (request.username.length < 5) {
-                call.respond(RegistroUsuarioResponse(
-                    comunicacao = "registro-usuario",
-                    registrado = false,
-                    mensagem = "O nome de usuário deve ter pelo menos 5 caracteres."
-                ))
-                return@post
-            }
-            if (request.senha.length < 5) {
-                call.respond(RegistroUsuarioResponse(
-                    comunicacao = "registro-usuario",
-                    registrado = false,
-                    mensagem = "A senha deve ter pelo menos 5 caracteres."
-                ))
-                return@post
-            }
-
-            // Checamos se usuário com mesmo nome já existe
-            val userExists = transaction {
-                Usuarios.selectAll().any { it[Usuarios.nome] == request.username }
-            }
-            if (userExists) {
-                call.respond(RegistroUsuarioResponse(
-                    comunicacao = "registro-usuario",
-                    registrado = false,
-                    mensagem = "Usuario com mesmo nome ja registrado")
-                )
-                return@post
-            }
-
-            transaction {
-                Usuarios.insert {
-                    it[nome] = request.username
-                    it[senha] = request.senha
-                    it[dataNascimento] = LocalDate.parse(request.dataNascimento)
-                    it[visibilidade] = request.visibilidade
-                    it[dataCadastro] = LocalDate.now() // Agora salva a data atual corretamente
-                }
-            }
-
-            // Se tudo deu certo, enviamos mensagem de sucesso
-            call.respond(RegistroUsuarioResponse(
-                comunicacao = "registro-usuario",
-                registrado = true,
-                mensagem = "Usuario registrado com sucesso!"
-            ))
-        }
-    }
 
     // Rota para endpoint de login de usuários
     route("/login") {
@@ -301,20 +249,24 @@ fun Route.userRoutes() {
             val loginData = call.receive<LoginRequest>()
 
             val userExists = transaction {
-                Usuarios.selectAll().where { (Usuarios.nome eq loginData.username) and (Usuarios.senha eq loginData.senha) }.count() > 0
+                Usuarios.selectAll().where { (Usuarios.nome eq loginData.username) and
+                        (Usuarios.senha eq loginData.senha) }.count() > 0
             }
 
             if (userExists) {
                 // Atualiza o campo 'logado' para true ao fazer login
                 transaction {
-                    Usuarios.update({ (Usuarios.nome eq loginData.username) and (Usuarios.senha eq loginData.senha) }) {
+                    Usuarios.update({ (Usuarios.nome eq loginData.username) and
+                            (Usuarios.senha eq loginData.senha) }) {
                         it[logado] = true
                     }
                 }
                 val token = "usuario-${loginData.username}-logado"
-                call.respond(LoginResponse(comunicacao = "login", autenticado = true, mensagem = "login realizado com sucesso", token = token))
+                call.respond(LoginResponse(comunicacao = "login", autenticado = true,
+                    mensagem = "login realizado com sucesso", token = token))
             } else {
-                call.respond(LoginResponse(comunicacao = "login", autenticado = false, mensagem = "Usuário ou senha incorretos."))
+                call.respond(LoginResponse(comunicacao = "login", autenticado = false,
+                    mensagem = "Usuário ou senha incorretos."))
             }
         }
     }
@@ -396,7 +348,7 @@ fun Route.userRoutes() {
                     return@transaction
                 }
                 // 2. Verifica se o jogo existe
-                val jogoExiste = br.com.lichia.database.Games.selectAll().any { it[br.com.lichia.database.Games.id] == req.id_jogo }
+                val jogoExiste = Games.selectAll().any { it[Games.id].value == req.id_jogo }
                 if (!jogoExiste) {
                     resposta = AdicionarDesejoResponse(
                         comunicacao = "request-adicionar-desejo",
@@ -431,7 +383,7 @@ fun Route.userRoutes() {
                 }
                 resposta = AdicionarDesejoResponse(
                     comunicacao = "request-adicionar-desejo",
-                    mensagem = "jogo adicionado a lista de desejos com sucesso"
+                    mensagem = "jogo adicionado à lista de desejos com sucesso"
                 )
             }
             call.respond(resposta!!)
@@ -452,7 +404,7 @@ fun Route.userRoutes() {
                     return@transaction
                 }
                 // 2. Verifica se o jogo existe
-                val jogoExiste = br.com.lichia.database.Games.selectAll().any { it[br.com.lichia.database.Games.id] == req.id_jogo }
+                val jogoExiste = Games.selectAll().any { it[Games.id].value == req.id_jogo }
                 if (!jogoExiste) {
                     resposta = RemoverDesejoResponse(
                         comunicacao = "request-remover-desejo",
@@ -510,7 +462,7 @@ fun Route.userRoutes() {
                     return@transaction
                 }
                 // 2. Verifica se o jogo existe
-                val jogoExiste = br.com.lichia.database.Games.selectAll().any { it[br.com.lichia.database.Games.id] == req.id_jogo }
+                val jogoExiste = Games.selectAll().any { it[Games.id].value == req.id_jogo }
                 if (!jogoExiste) {
                     resposta = RequestCriarAvaliacaoResponse(
                         comunicacao = "request-criar-avaliacao",
@@ -540,15 +492,15 @@ fun Route.userRoutes() {
                 val idAvaliacao = br.com.lichia.database.Avaliacoes
                     .selectAll()
                     .where {
-                        (br.com.lichia.database.Avaliacoes.usuarioId eq req.id_usuario) and
-                        (br.com.lichia.database.Avaliacoes.gameId eq req.id_jogo) and
-                        (br.com.lichia.database.Avaliacoes.data eq java.time.LocalDate.now()) and
-                        (br.com.lichia.database.Avaliacoes.nota eq req.nota) and
-                        (br.com.lichia.database.Avaliacoes.resenha eq req.resenha)
+                        (Avaliacoes.usuarioId eq req.id_usuario) and
+                        (Avaliacoes.gameId eq req.id_jogo) and
+                        (Avaliacoes.data eq java.time.LocalDate.now()) and
+                        (Avaliacoes.nota eq req.nota) and
+                        (Avaliacoes.resenha eq req.resenha)
                     }
-                    .orderBy(br.com.lichia.database.Avaliacoes.id, org.jetbrains.exposed.sql.SortOrder.DESC)
+                    .orderBy(Avaliacoes.id, org.jetbrains.exposed.sql.SortOrder.DESC)
                     .limit(1)
-                    .firstOrNull()?.let { it[br.com.lichia.database.Avaliacoes.id].value }
+                    .firstOrNull()?.let { it[Avaliacoes.id].value }
                 resposta = RequestCriarAvaliacaoResponse(
                     comunicacao = "request-criar-avaliacao",
                     mensagem = "avaliação registrada com sucesso!",
@@ -564,7 +516,7 @@ fun Route.userRoutes() {
             var resposta: RequestRemoverAvaliacaoResponse? = null
             transaction {
                 // 1. Checa se a avaliação existe
-                val avaliacao = br.com.lichia.database.Avaliacoes.selectAll().find { it[br.com.lichia.database.Avaliacoes.id].value == req.id_avaliacao }
+                val avaliacao = Avaliacoes.selectAll().find { it[Avaliacoes.id].value == req.id_avaliacao }
                 if (avaliacao == null) {
                     resposta = RequestRemoverAvaliacaoResponse(
                         comunicacao = "request-remover-avaliacao",
@@ -573,7 +525,7 @@ fun Route.userRoutes() {
                     return@transaction
                 }
                 // 2. Checa se o usuário existe
-                val usuario = br.com.lichia.database.Usuarios.selectAll().find { it[br.com.lichia.database.Usuarios.id] == req.id_usuario }
+                val usuario = Usuarios.selectAll().find { it[Usuarios.id] == req.id_usuario }
                 if (usuario == null) {
                     resposta = RequestRemoverAvaliacaoResponse(
                         comunicacao = "request-remover-avaliacao",
@@ -591,7 +543,7 @@ fun Route.userRoutes() {
                     return@transaction
                 }
                 // 4. Checa se o usuário é o autor da avaliação
-                val autorAvaliacaoId = avaliacao[br.com.lichia.database.Avaliacoes.usuarioId]
+                val autorAvaliacaoId = avaliacao[Avaliacoes.usuarioId]
                 if (autorAvaliacaoId != req.id_usuario) {
                     resposta = RequestRemoverAvaliacaoResponse(
                         comunicacao = "request-remover-avaliacao",
@@ -600,7 +552,7 @@ fun Route.userRoutes() {
                     return@transaction
                 }
                 // 5. Remove a avaliação
-                br.com.lichia.database.Avaliacoes.deleteWhere { br.com.lichia.database.Avaliacoes.id eq req.id_avaliacao }
+                Avaliacoes.deleteWhere { Avaliacoes.id eq req.id_avaliacao }
                 resposta = RequestRemoverAvaliacaoResponse(
                     comunicacao = "request-remover-avaliacao",
                     mensagem = "Avaliação removida com sucesso!"
@@ -647,10 +599,10 @@ fun Route.userRoutes() {
                 }
                 val desejos = Desejos.selectAll().filter { it[Desejos.usuarioId] == req.id_usr_alvo }
                 val listaGames = desejos.mapNotNull { desejo ->
-                    val game = Games.selectAll().find { it[Games.id] == desejo[Desejos.gameId] }
+                    val game = Games.selectAll().find { it[Games.id].value == desejo[Desejos.gameId] }
                     game?.let {
                         DesejoResponseItem(
-                            id = it[Games.id],
+                            id = it[Games.id].value,
                             titulo = it[Games.titulo],
                             genero = it[Games.genero] ?: "",
                             anoLancamento = it[Games.anoLancamento],
@@ -792,16 +744,16 @@ fun Route.userRoutes() {
                     }
                 }
                 // Busca avaliações do usuário alvo
-                val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { it[br.com.lichia.database.Avaliacoes.usuarioId] == req.id_usr_alvo }
+                val avaliacoes = Avaliacoes.selectAll().filter { it[Avaliacoes.usuarioId] == req.id_usr_alvo }
                 val listaAvaliacoes = avaliacoes.map { avaliacao ->
                     HistoricoAvaliacaoResponseItem(
                         autor = usuarioAlvo[Usuarios.nome],
                         id_autor = usuarioAlvo[Usuarios.id],
-                        nota = avaliacao[br.com.lichia.database.Avaliacoes.nota],
-                        data_criacao = avaliacao[br.com.lichia.database.Avaliacoes.data].format(
+                        nota = avaliacao[Avaliacoes.nota],
+                        data_criacao = avaliacao[Avaliacoes.data].format(
                             java.time.format.DateTimeFormatter.ofPattern("EEE-dd-MMM-yyyy").withLocale(java.util.Locale("pt", "BR"))
                         ),
-                        resenha = avaliacao[br.com.lichia.database.Avaliacoes.resenha]
+                        resenha = avaliacao[Avaliacoes.resenha]
                     )
                 }
                 resposta = listaAvaliacoes
@@ -810,4 +762,65 @@ fun Route.userRoutes() {
         }
     }
 
+    route("/registro") {
+        post {
+            val request = call.receive<RegistroUsuarioRequest>()
+
+            // Checa tamanho mínimo do username e senha
+            if (request.username.length < 5) {
+                call.respond(
+                    RegistroUsuarioResponse(
+                        comunicacao = "registro-usuario",
+                        registrado = false,
+                        mensagem = "O nome de usuário deve ter pelo menos 5 caracteres."
+                    )
+                )
+                return@post
+            }
+            if (request.senha.length < 5) {
+                call.respond(
+                    RegistroUsuarioResponse(
+                        comunicacao = "registro-usuario",
+                        registrado = false,
+                        mensagem = "A senha deve ter pelo menos 5 caracteres."
+                    )
+                )
+                return@post
+            }
+
+            // Checamos se usuário com mesmo nome já existe
+            val userExists = transaction {
+                Usuarios.selectAll().any { it[Usuarios.nome] == request.username }
+            }
+            if (userExists) {
+                call.respond(
+                    RegistroUsuarioResponse(
+                        comunicacao = "registro-usuario",
+                        registrado = false,
+                        mensagem = "Usuario com mesmo nome ja registrado"
+                    )
+                )
+                return@post
+            }
+
+            transaction {
+                Usuarios.insert {
+                    it[nome] = request.username
+                    it[senha] = request.senha
+                    it[dataNascimento] = LocalDate.parse(request.dataNascimento)
+                    it[visibilidade] = request.visibilidade
+                    it[dataCadastro] = LocalDate.now() // Agora salva a data atual corretamente
+                }
+            }
+
+            // Se tudo deu certo, enviamos mensagem de sucesso
+            call.respond(
+                RegistroUsuarioResponse(
+                    comunicacao = "registro-usuario",
+                    registrado = true,
+                    mensagem = "Usuario registrado com sucesso!"
+                )
+            )
+        }
+    }
 }

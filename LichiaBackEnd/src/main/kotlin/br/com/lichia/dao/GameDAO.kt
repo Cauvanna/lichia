@@ -16,7 +16,7 @@ object GameDAO {
             Games.selectAll().where { Games.id eq id }
                 .mapNotNull {
                     Game(
-                        id = it[Games.id],
+                        id = it[Games.id].value,
                         titulo = it[Games.titulo],
                         genero = it[Games.genero],
                         anoLancamento = it[Games.anoLancamento],

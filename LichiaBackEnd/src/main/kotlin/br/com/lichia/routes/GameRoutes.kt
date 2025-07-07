@@ -1,7 +1,7 @@
 package br.com.lichia.routes
 
 /*
-    * GamesRoutes.kt é um arquivo que define as rotas relacionadas aos jogos no servidor Ktor.
+    * GameRoutes.kt é um arquivo que define as rotas relacionadas aos jogos no servidor Ktor.
     * Vamos começar listando os jogos para que o frontend possa obtê-los do banco de dados.
  */
 
@@ -11,7 +11,6 @@ import br.com.lichia.database.Usuarios
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.request.*
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import br.com.lichia.dto.GameDTO
 import br.com.lichia.dto.GameDetalhadoDTO
@@ -90,7 +89,7 @@ fun Route.gameRoutes() {
             val gameList = transaction {
                 Games.selectAll().map {
                     GameDTO(
-                        id = it[Games.id],
+                        id = it[Games.id].value,
                         titulo = it[Games.titulo],
                         genero = it[Games.genero],
                         anoLancamento = it[Games.anoLancamento],
@@ -118,7 +117,7 @@ fun Route.gameRoutes() {
                 val gameList = transaction {
                     Games.selectAll().map {
                         GameDTO(
-                            id = it[Games.id],
+                            id = it[Games.id].value,
                             titulo = it[Games.titulo],
                             genero = it[Games.genero],
                             anoLancamento = it[Games.anoLancamento],
@@ -151,7 +150,7 @@ fun Route.gameRoutes() {
             val gameList = transaction {
                 Games.selectAll().map {
                     GameDTO(
-                        id = it[Games.id],
+                        id = it[Games.id].value,
                         titulo = it[Games.titulo],
                         genero = it[Games.genero],
                         anoLancamento = it[Games.anoLancamento],
@@ -178,13 +177,13 @@ fun Route.gameRoutes() {
             if (req.username.isBlank() && req.token.isBlank()) {
                 val gameDetalhadoDTO = transaction {
                     Games.selectAll().where { Games.id eq req.id_jogo }.singleOrNull()?.let {
-                        val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == it[Games.id] }
-                        val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == it[Games.id] && av[br.com.lichia.database.Avaliacoes.nota] != null }
+                        val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == it[Games.id].value }
+                        val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == it[Games.id].value && av[br.com.lichia.database.Avaliacoes.nota] != null }
                         val notaMedia = if (avaliacoes.isNotEmpty()) {
                             avaliacoes.map { av -> av[br.com.lichia.database.Avaliacoes.nota]!! }.average()
                         } else 0.0
                         GameDetalhadoDTO(
-                            id = it[Games.id],
+                            id = it[Games.id].value,
                             titulo = it[Games.titulo],
                             genero = it[Games.genero],
                             anoLancamento = it[Games.anoLancamento],
@@ -225,13 +224,13 @@ fun Route.gameRoutes() {
             // Token válido, busca o jogo normalmente
             val gameDetalhadoDTO = transaction {
                 Games.selectAll().where { Games.id eq req.id_jogo }.singleOrNull()?.let {
-                    val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == it[Games.id] }
-                    val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == it[Games.id] && av[br.com.lichia.database.Avaliacoes.nota] != null }
+                    val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == it[Games.id].value }
+                    val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == it[Games.id].value && av[br.com.lichia.database.Avaliacoes.nota] != null }
                     val notaMedia = if (avaliacoes.isNotEmpty()) {
                         avaliacoes.map { av -> av[br.com.lichia.database.Avaliacoes.nota]!! }.average()
                     } else 0.0
                     GameDetalhadoDTO(
-                        id = it[Games.id],
+                        id = it[Games.id].value,
                         titulo = it[Games.titulo],
                         genero = it[Games.genero],
                         anoLancamento = it[Games.anoLancamento],
@@ -267,7 +266,7 @@ fun Route.gameRoutes() {
             var resposta: Any? = null
             transaction {
                 // 1. Checa se o game existe
-                val gameExiste = Games.selectAll().any { it[Games.id] == req.id_game }
+                val gameExiste = Games.selectAll().any { it[Games.id].value == req.id_game }
                 if (!gameExiste) {
                     resposta = RequestListaDeDesejantesErroResponse(
                         comunicacao = "request-lista-de-desejantes",
@@ -323,7 +322,7 @@ fun Route.gameRoutes() {
             var resposta: Any? = null
             transaction {
                 // Checa se o jogo existe
-                val jogoExiste = Games.selectAll().any { it[Games.id] == req.id_jogo }
+                val jogoExiste = Games.selectAll().any { it[Games.id].value == req.id_jogo }
                 if (!jogoExiste) {
                     resposta = RequestListaDeAvaliacoesErroResponse(
                         comunicacao = "request-lista-de-avaliacoes",
