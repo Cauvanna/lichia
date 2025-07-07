@@ -37,7 +37,7 @@ const Home: React.FC = () => {
               </span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
-              Acompanhe sua jornada gaming, descubra novos favoritos e conecte-se com outros gamers na plataforma social de games definitiva.
+              Acompanhe sua jornada gaming, descubra jogos, compartilhe suas impressões e conecte-se com outros gamers na sua plataforma social de games favorita
             </p>
             
             {!isAuthenticated && (
