@@ -34,6 +34,7 @@ fun Application.configureRouting() {
         // routing da página /games
         gameRoutes() // Rota para jogos, definida em `GameRoutes.kt`
 
+
         // Static plugin. Tente acessar `/static/index.html` para ver o Task Manager
         staticResources("/static", "static")
 
