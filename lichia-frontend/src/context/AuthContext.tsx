@@ -1,22 +1,29 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+// src/context/AuthContext.tsx (INTEGRADO)
 
-interface User {
-  id: string;
-  username: string;
-  displayName: string;
-  avatar: string;
-  bio: string;
-  visibilidade: boolean;
-  dataNascimento: string;
-  dataCadastro: string;
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { User } from '../types'; // Supondo que você tenha um arquivo de tipos
+
+// Função auxiliar para chamadas de API
+async function apiCall(endpoint: string, body: object) {
+    try {
+        const response = await fetch(`http://localhost:8080${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        return await response.json();
+    } catch (error) {
+        console.error(`Erro na chamada da API para ${endpoint}:`, error);
+        return { success: false, registrado: false, autenticado: false, mensagem: 'Erro de comunicação com o servidor.' };
+    }
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (username: string, password: string, dataNascimento: string, visibilidade: boolean) => Promise<{ success: boolean; message?: string }>;
+  login: (username: string, senha: string) => Promise<{ success: boolean; message?: string }>;
+  register: (username: string, senha: string, dataNascimento: string, visibilidade: boolean) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -31,148 +38,93 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Começa true para checar o localStorage
+
+  useEffect(() => {
+    // Carrega dados do usuário do localStorage ao iniciar a aplicação
+    try {
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+        if (storedToken && storedUser) {
+            setToken(storedToken);
+            setUser(JSON.parse(storedUser));
+        }
+    } catch (error) {
+        console.error("Falha ao carregar dados do localStorage", error);
+        localStorage.clear(); // Limpa em caso de dados corrompidos
+    }
+    setIsLoading(false);
+  }, []);
 
   const isAuthenticated = !!user && !!token;
 
-  const login = async (username: string, senha: string): Promise<{ success: boolean; message?: string }> => {
+  const login = async (username: string, senha: string) => {
     setIsLoading(true);
-    
-    try {
-      // Create JSON for backend
-      const loginRequest = {
-        comunicacao: "login",
-        username,
-        senha
+    const body = { comunicacao: "login", username, senha };
+    const data = await apiCall('/login', body);
+
+    if (data.autenticado) {
+      // Busca os dados completos do usuário após o login bem-sucedido
+      const userDetailsResponse = await apiCall('/request-painel-usuario', {
+        comunicacao: "request-painel-usuario",
+        username: username,
+        token: data.token
+      });
+
+      const userData: User = {
+          id: userDetailsResponse.id,
+          username: userDetailsResponse.nome,
+          displayName: userDetailsResponse.nome,
+          avatar: https://avatar.vercel.sh/${userDetailsResponse.nome}.png, // Avatar genérico
+          bio: 'Bem-vindo à Lichia!',
+          visibilidade: userDetailsResponse.visibilidade,
+          dataNascimento: userDetailsResponse.data_nascimento,
+          dataCadastro: new Date(userDetailsResponse.data_cadastro * 1000).toISOString(),
       };
-      
-      console.log('Login request JSON:', JSON.stringify(loginRequest, null, 2));
-      
-      // Simulate backend response for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login response
-      const mockResponse = {
-        comunicacao: "login",
-        autenticado: true,
-        token: `user-${username}-logged`
-      };
-      
-      if (mockResponse.autenticado) {
-        const mockUser: User = {
-          id: '1',
-          username,
-          displayName: username.charAt(0).toUpperCase() + username.slice(1),
-          avatar: 'https://images.pexels.com/photos/1040160/pexels-photo-1040160.jpeg?auto=compress&cs=tinysrgb&w=150',
-          bio: 'Gaming enthusiast and reviewer',
-          visibilidade: true,
-          dataNascimento: '1990-01-01',
-          dataCadastro: new Date().toISOString()
-        };
-        
-        setUser(mockUser);
-        setToken(mockResponse.token);
-        localStorage.setItem('token', mockResponse.token);
-        
-        return { success: true };
-      } else {
-        return { success: false, message: 'Invalid username or password' };
-      }
-    } catch (error) {
-      return { success: false, message: 'Login failed. Please try again.' };
-    } finally {
+
+      setUser(userData);
+      setToken(data.token);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(userData));
       setIsLoading(false);
+      return { success: true, message: data.mensagem };
+    } else {
+      setIsLoading(false);
+      return { success: false, message: data.mensagem };
     }
   };
 
-  const register = async (
-    username: string, 
-    senha: string, 
-    dataNascimento: string, 
-    visibilidade: boolean
-  ): Promise<{ success: boolean; message?: string }> => {
+  const register = async (username: string, senha: string, dataNascimento: string, visibilidade: boolean) => {
     setIsLoading(true);
-    
-    try {
-      // Create JSON for backend
-      const registerRequest = {
-        comunicacao: "registro-usuario",
-        username,
-        senha,
-        dataNascimento,
-        visibilidade
-      };
-      
-      console.log('Register request JSON:', JSON.stringify(registerRequest, null, 2));
-      
-      // Simulate backend response
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock response - simulate success or failure
-      const isUsernameAvailable = !['admin', 'test', 'user'].includes(username.toLowerCase());
-      
-      if (isUsernameAvailable) {
-        const mockResponse = {
-          comunicacao: "registro-usuario",
-          registrado: true,
-          mensagem: "Usuario registrado com sucesso!"
-        };
-        
-        return { success: true, message: mockResponse.mensagem };
-      } else {
-        const mockResponse = {
-          comunicacao: "registro-usuario",
-          registrado: false,
-          mensagem: "Usuario com mesmo nome ja registrado"
-        };
-        
-        return { success: false, message: mockResponse.mensagem };
-      }
-    } catch (error) {
-      return { success: false, message: 'Registration failed. Please try again.' };
-    } finally {
-      setIsLoading(false);
-    }
+    const body = { comunicacao: "registro-usuario", username, senha, dataNascimento, visibilidade };
+    const data = await apiCall('/registro', body);
+    setIsLoading(false);
+    return { success:
+
+data.registrado, message: data.mensagem };
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
+    setIsLoading(true);
     if (user && token) {
-      // Create JSON for backend
-      const logoutRequest = {
-        comunicacao: "logout",
-        username: user.username,
-        token
-      };
-      
-      console.log('Logout request JSON:', JSON.stringify(logoutRequest, null, 2));
-      
-      // Simulate backend call
-      await new Promise(resolve => setTimeout(resolve, 500));
+        const body = { comunicacao: "logout", username: user.username, token };
+        await apiCall('/logout', body); // Não precisamos esperar a resposta
     }
-    
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoading(false);
   };
 
+  const value = { user, token, isAuthenticated, login, register, logout, isLoading };
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      isAuthenticated,
-      login,
-      register,
-      logout,
-      isLoading
-    }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };

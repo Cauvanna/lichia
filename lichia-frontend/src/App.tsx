@@ -20,6 +20,10 @@ import Register from './pages/Register';
 function App() {
   return (
     <AuthProvider>
+        <GameProvider> {/* <-- ADICIONE AQUI */}    <WishlistProvider>
+              <ReviewProvider>        {/* ... Router ... */}
+              </ReviewProvider>    </WishlistProvider>
+          </GameProvider> {/* <-- E AQUI */}
       <WishlistProvider>
         <ReviewProvider>
           <Router>
