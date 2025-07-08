@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Game } from '../../types';
 import { Star, Heart, Play, Check, Clock, Plus } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface GameCardProps {
   game: Game;
@@ -12,6 +13,9 @@ interface GameCardProps {
 const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = true }) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(game.id);
+  const [loading, setLoading] = useState(false);
+  const [showLoginNotice, setShowLoginNotice] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const getStatusIcon = () => {
     switch (game.playStatus) {
@@ -43,36 +47,52 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
     }
   };
 
-  const handleWishlistClick = (e: React.MouseEvent) => {
+  const handleWishlistClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleWishlist(game.id);
+    if (!isAuthenticated) {
+      setShowLoginNotice(true);
+      setTimeout(() => setShowLoginNotice(false), 2500);
+      return;
+    }
+    setLoading(true);
+    await toggleWishlist(game.id);
+    setLoading(false);
   };
 
   return (
-    <div 
+    <div
       className="bg-gray-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 cursor-pointer group relative"
       onClick={() => onGameClick(game.id)}
     >
       <div className="relative">
-        <img 
-          src={game.coverImage} 
+        <img
+          src={game.coverImage}
           alt={game.title}
           className="w-full h-64 object-cover"
+          onError={e => {
+            (e.currentTarget as HTMLImageElement).src = 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover_qhhlj6.jpg';
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+
         <button
           onClick={handleWishlistClick}
+          disabled={loading}
           className={`absolute top-3 right-3 rounded-full p-2 transition-all duration-200 hover:scale-110 ${
-            isWishlisted 
-              ? 'bg-red-500 text-white' 
+            isWishlisted
+              ? 'bg-red-500 text-white'
               : 'bg-black/50 text-white hover:bg-red-500'
           }`}
           title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
         </button>
-        
+        {showLoginNotice && (
+          <div className="absolute top-12 right-3 bg-gray-900 text-white text-xs rounded shadow-lg px-4 py-2 z-50 border border-lichia-from animate-fade-in">
+            Registre-se e faça login para adicionar um jogo à sua Lista de Desejos
+          </div>
+        )}
+
         {showStatus && game.playStatus && (
           <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-2">
             {getStatusIcon()}
@@ -80,17 +100,17 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
           </div>
         )}
       </div>
-      
+
       <div className="p-4">
         <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">{game.title}</h3>
         <p className="text-gray-400 text-sm mb-2">{game.developer} • {game.releaseYear}</p>
-        
+
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-white font-medium">{game.rating}</span>
+            <span className="text-white font-medium">{game.rating?.toFixed(1)}</span>
           </div>
-          
+
           {game.userRating && (
             <div className="flex items-center gap-1">
               <span className="text-purple-400 text-sm">Your rating:</span>
@@ -101,7 +121,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
             </div>
           )}
         </div>
-        
+
         <div className="flex flex-wrap gap-1 mb-3">
           {game.genres.slice(0, 3).map((genre, index) => (
             <span key={index} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">
@@ -109,7 +129,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
             </span>
           ))}
         </div>
-        
+
         <p className="text-gray-400 text-sm line-clamp-3">{game.description}</p>
       </div>
     </div>

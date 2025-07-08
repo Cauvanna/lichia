@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockGames } from '../data/mockData';
-import { Library as LibraryIcon, Search, Grid, List, Star, Play, Check, Clock, Plus } from 'lucide-react';
+import { Heart, Search, Grid, List, Star, Play, Check, Clock, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GameCard from '../components/ui/GameCard';
+import { mockGames } from '../data/mockData';
 
 const Library: React.FC = () => {
   const navigate = useNavigate();
@@ -137,16 +137,16 @@ const Library: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3">
-              <LibraryIcon className="w-8 h-8 text-white" />
+              <Heart className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Minha Library</h1>
-              <p className="text-gray-400">Seus jogos e avaliações</p>
+              <h1 className="text-3xl font-bold text-white">Lista de Desejos</h1>
+              <p className="text-gray-400">Seus jogos desejados</p>
             </div>
           </div>
 
           <div className="text-gray-400">
-            {filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'} na sua library
+            {filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'} na sua lista de desejos
           </div>
         </div>
 
@@ -261,7 +261,7 @@ const Library: React.FC = () => {
         ) : (
           <div className="text-center py-16">
             <div className="bg-gray-800 rounded-lg p-12 max-w-md mx-auto">
-              <LibraryIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <Heart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">
                 {searchTerm || filterStatus !== 'all' ? 'Nenhum game encontrado' : 'Sua library está vazia'}
               </h3>

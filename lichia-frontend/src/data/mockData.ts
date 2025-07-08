@@ -1,7 +1,7 @@
 // src/data/mockData.ts (CORRIGIDO)
 
 import { Game, User, Review, Activity } from '../types';
-import gamesFromFile from './games.json';
+import gamesFromFile from './games';
 
 // Mapeamento CORRETO dos dados do seu JSON para o tipo Game
 const typedGames: Game[] = gamesFromFile.map((game: any) => {
@@ -19,8 +19,8 @@ const typedGames: Game[] = gamesFromFile.map((game: any) => {
     description: game.summary || `Um jogo de ${game.genero} lançado em ${game.anoLancamento}.`, // Criando uma descrição padrão
     genres: genres, // Usando os gêneros processados
     platforms: [game.consoleLancamento] || [], // Usando 'consoleLancamento'
-    playStatus: undefined, // Esses campos não estão no seu JSON
-    userRating: undefined,
+//     playStatus: undefined, // Esses campos não estão no seu JSON
+//     userRating: undefined,
   };
 }).filter(game => game.title); // Garante que nenhum jogo sem título entre na lista
 

@@ -1,15 +1,29 @@
 export interface Game {
-  id: string;
-  title: string;
-  developer: string;
-  releaseYear: number;
-  genres: string[];
-  platforms: string[];
-  coverImage: string;
-  rating: number;
+  id: string; // ou number, mas manteremos string para compatibilidade
+  titulo: string;
+  genero: string;
+  anoLancamento: number;
+  consoleLancamento: string;
+  ehHandheld: boolean;
+  maxJogadores: number;
+  temOnline: boolean;
+  publisher: string;
+  temSequencia: boolean;
+  precoUsual: number;
+  duracaoMainStoryAverage: number;
+  duracaoMainStoryExtras: number;
+  duracaoCompletionistAverage: number;
+  // Campos opcionais do frontend para compatibilidade
+  title?: string;
+  developer?: string;
+  releaseYear?: number;
+  genres?: string[];
+  platforms?: string[];
+  coverImage?: string;
+  rating?: number;
   userRating?: number;
-  description: string;
-  screenshots: string[];
+  description?: string;
+  screenshots?: string[];
   isWishlisted?: boolean;
   playStatus?: 'playing' | 'completed' | 'dropped' | 'plan_to_play';
 }

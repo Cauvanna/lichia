@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Star, Send } from 'lucide-react';
+import { X, Star, Send, StarHalf } from 'lucide-react';
 import { Game } from '../../types';
 import { useReviews } from '../../context/ReviewContext';
 import { useAuth } from '../../context/AuthContext';
@@ -12,9 +12,9 @@ interface ReviewModalProps {
 
 const ReviewModal: React.FC<ReviewModalProps> = ({ game, isOpen, onClose }) => {
   const { addReview } = useReviews();
-  const { isAuthenticated } = useAuth();
-  const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
+  const { user, isAuthenticated } = useAuth();
+  const [rating, setRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -27,34 +27,35 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ game, isOpen, onClose }) => {
     setError('');
     setSuccess('');
 
-    if (!isAuthenticated) {
-      setError('You must be logged in to write a review');
+    if (!isAuthenticated || !user) {
+      setError('Você precisa estar logado para registrar uma avaliação.');
       return;
     }
 
-    if (rating === 0) {
-      setError('Please select a rating');
+    if (rating === null) {
+      setError('Por favor, selecione uma nota.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const result = await addReview(game.id, rating, content);
-      
+      // Envia o id do jogo corretamente para o addReview
+      const result = await addReview(String(game.id), rating, content);
+
       if (result.success) {
-        setSuccess(result.message || 'Review added successfully!');
+        setSuccess(result.message || 'Avaliação publicada com sucesso!');
         setTimeout(() => {
           onClose();
-          setRating(0);
+          setRating(null);
           setContent('');
           setSuccess('');
         }, 1500);
       } else {
-        setError(result.message || 'Failed to add review');
+        setError(result.message || 'Falha ao publicar avaliação');
       }
-    } catch (error) {
-      setError('An unexpected error occurred');
+    } catch (err) {
+      setError('Um erro inesperado ocorreu.');
     } finally {
       setIsSubmitting(false);
     }
@@ -63,168 +64,109 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ game, isOpen, onClose }) => {
   const handleClose = () => {
     if (!isSubmitting) {
       onClose();
-      setRating(0);
+      setRating(null);
+      setHoverRating(null);
       setContent('');
       setError('');
       setSuccess('');
     }
   };
 
+  const renderStars = () => {
+    return [1, 2, 3, 4, 5].map((starIndex) => {
+      const currentRating = hoverRating !== null ? hoverRating : rating;
+      let starComponent;
+
+      // Modificado para tratar o 0 corretamente
+      if (currentRating !== null && currentRating >= starIndex) {
+        starComponent = <Star className="w-8 h-8 text-yellow-400 fill-current" />;
+      } else if (currentRating !== null && currentRating >= starIndex - 0.5) {
+        starComponent = <StarHalf className="w-8 h-8 text-yellow-400 fill-current" />;
+      } else {
+        starComponent = <Star className="w-8 h-8 text-gray-300 fill-current" />;
+      }
+
+      return (
+        <div
+          key={starIndex}
+          className="relative cursor-pointer"
+          onMouseLeave={() => setHoverRating(null)}
+        >
+          <div
+            className="absolute top-0 left-0 w-1/2 h-full"
+            onMouseEnter={() => setHoverRating(starIndex - 0.5)}
+            onClick={() => setRating(starIndex - 0.5)}
+          />
+          <div
+            className="absolute top-0 right-0 w-1/2 h-full"
+            onMouseEnter={() => setHoverRating(starIndex)}
+            onClick={() => setRating(starIndex)}
+          />
+          {starComponent}
+        </div>
+      );
+    });
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div className="flex items-center gap-4">
-            <img
-              src={game.coverImage}
-              alt={game.title}
-              className="w-16 h-20 object-cover rounded"
-            />
-            <div>
-              <h2 className="text-xl font-bold text-white">Write a Review</h2>
-              <p className="text-gray-400">{game.title}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 transition-opacity duration-300">
+      <div className="bg-gray-800 text-white rounded-lg shadow-lg p-6 w-full max-w-md relative transform transition-all duration-300 scale-95 animate-fade-in-up">
+        <button
+          className="absolute top-3 right-3 text-gray-400 hover:text-white disabled:opacity-50"
+          onClick={handleClose}
+          disabled={isSubmitting}
+          aria-label="Fechar modal"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <h2 className="text-2xl font-bold mb-2 text-lichia-500">Avalie {game.titulo}</h2>
+        <p className="text-gray-400 mb-4">Selecione uma nota e, se quiser, deixe um comentário.</p>
+
+        {/* --- Seção de Estrelas Corrigida com área para nota 0 --- */}
+        <div className="flex items-center justify-center mb-4" onMouseLeave={() => setHoverRating(null)}>
+            {/* INÍCIO DA MUDANÇA: Área para selecionar nota 0 */}
+            <div
+                className="w-8 h-8 cursor-pointer"
+                onMouseEnter={() => setHoverRating(0)}
+                onClick={() => setRating(0)}
+            ></div>
+            {/* FIM DA MUDANÇA */}
+
+            <div className="flex space-x-1">
+                {renderStars()}
             </div>
-          </div>
-          <button
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
+        <div className="text-center text-lg font-bold text-yellow-400 mb-4 h-6">
+            {/* Modificado para exibir a nota 0 corretamente */}
+            {hoverRating !== null ? `${hoverRating} / 5` : (rating !== null ? `${rating} / 5` : 'Selecione a nota')}
+        </div>
 
-          {success && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-              <p className="text-green-400 text-sm">{success}</p>
-            </div>
-          )}
+        <form onSubmit={handleSubmit}>
+          <textarea
+            className="w-full bg-gray-700 border border-gray-600 rounded p-3 mb-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lichia-from resize-none"
+            rows={4}
+            placeholder="O que você achou do jogo?"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            disabled={isSubmitting}
+          />
 
-          {!isAuthenticated && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-              <p className="text-yellow-400 text-sm">
-                You need to be logged in to write a review. 
-                <a href="/login" className="text-yellow-300 hover:text-yellow-200 underline ml-1">
-                  Sign in here
-                </a>
-              </p>
-            </div>
-          )}
+          {error && <div className="text-red-400 mb-2 text-center">{error}</div>}
+          {success && <div className="text-green-400 mb-2 text-center">{success}</div>}
 
-          {/* Rating */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Your Rating *
-            </label>
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoveredRating(star)}
-                  onMouseLeave={() => setHoveredRating(0)}
-                  disabled={isSubmitting || !isAuthenticated}
-                  className="hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Star
-                    className={`w-8 h-8 ${
-                      star <= (hoveredRating || rating)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-gray-600 hover:text-yellow-400'
-                    }`}
-                  />
-                </button>
-              ))}
-              {rating > 0 && (
-                <span className="text-white font-medium ml-2">{rating}/5</span>
-              )}
-            </div>
-          </div>
-
-          {/* Review Content */}
-          <div>
-            <label htmlFor="content" className="block text-sm font-medium text-gray-300 mb-2">
-              Your Review (Optional)
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              disabled={isSubmitting || !isAuthenticated}
-              className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors resize-none disabled:opacity-50"
-              rows={6}
-              placeholder="Share your thoughts about this game... What did you like or dislike? Would you recommend it to others?"
-            />
-            <div className="flex justify-between items-center mt-2">
-              <p className="text-gray-400 text-sm">
-                {content.length}/1000 characters
-              </p>
-              {content.length > 1000 && (
-                <p className="text-red-400 text-sm">Character limit exceeded</p>
-              )}
-            </div>
-          </div>
-
-          {/* Game Info */}
-          <div className="bg-gray-700 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2">Game Information</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-400">Developer:</span>
-                <span className="text-white ml-2">{game.developer}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Release Year:</span>
-                <span className="text-white ml-2">{game.releaseYear}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Average Rating:</span>
-                <div className="flex items-center gap-1 ml-2">
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  <span className="text-white">{game.rating}</span>
-                </div>
-              </div>
-              <div>
-                <span className="text-gray-400">Genres:</span>
-                <span className="text-white ml-2">{game.genres.slice(0, 2).join(', ')}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !isAuthenticated || rating === 0 || content.length > 1000}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-              {isSubmitting ? 'Publishing...' : 'Publish Review'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-lichia-from to-lichia-to text-white font-bold px-4 py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            disabled={isSubmitting || rating === null}
+          >
+            <Send className="w-5 h-5 mr-2" />
+            {isSubmitting ? 'Publicando...' : 'Publicar Avaliação'}
+          </button>
         </form>
+
+        {/* DEBUG: Exibe o id do jogo */}
+        <div className="mt-4 text-xs text-gray-500">ID do jogo: {game?.id}</div>
       </div>
     </div>
   );

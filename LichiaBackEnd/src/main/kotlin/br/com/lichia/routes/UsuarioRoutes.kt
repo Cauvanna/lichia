@@ -37,7 +37,8 @@ data class LoginResponse(
     val comunicacao: String,
     val autenticado: Boolean?,
     val token: String = "", // se der errado, envia um token vazio
-    val mensagem: String? = null
+    val mensagem: String? = null,
+    val id_usuario: Int? = null // <-- Adicionado id_usuario
 )
 
 
@@ -237,6 +238,19 @@ data class RegistroUsuarioResponse(
     val mensagem: String
 )
 
+@Serializable
+data class AvaliacaoPublicaResponse(
+    val id: Int,
+    val usuarioId: Int,
+    val autor_nome: String, // novo campo
+    val gameId: Int,
+    val nota: Double?,
+    val resenha: String?,
+    val visibilidade: Boolean,
+    val data: String,
+    val titulo_jogo: String // novo campo
+)
+
 /******************************************************************************************************************/
 // ROTAS DOS ENDPOINTS //
 /******************************************************************************************************************/
@@ -248,12 +262,14 @@ fun Route.userRoutes() {
         post {
             val loginData = call.receive<LoginRequest>()
 
-            val userExists = transaction {
+            val userId: Int? = transaction {
                 Usuarios.selectAll().where { (Usuarios.nome eq loginData.username) and
-                        (Usuarios.senha eq loginData.senha) }.count() > 0
+                        (Usuarios.senha eq loginData.senha) }
+                    .map { it[Usuarios.id] }
+                    .firstOrNull()
             }
 
-            if (userExists) {
+            if (userId != null) {
                 // Atualiza o campo 'logado' para true ao fazer login
                 transaction {
                     Usuarios.update({ (Usuarios.nome eq loginData.username) and
@@ -261,9 +277,14 @@ fun Route.userRoutes() {
                         it[logado] = true
                     }
                 }
-                val token = "usuario-${loginData.username}-logado"
-                call.respond(LoginResponse(comunicacao = "login", autenticado = true,
-                    mensagem = "login realizado com sucesso", token = token))
+                val token = "user-${loginData.username}-logado"
+                call.respond(LoginResponse(
+                    comunicacao = "login",
+                    autenticado = true,
+                    mensagem = "login realizado com sucesso",
+                    token = token,
+                    id_usuario = userId // <-- Envia o id do usuário
+                ))
             } else {
                 call.respond(LoginResponse(comunicacao = "login", autenticado = false,
                     mensagem = "Usuário ou senha incorretos."))
@@ -821,6 +842,31 @@ fun Route.userRoutes() {
                     mensagem = "Usuario registrado com sucesso!"
                 )
             )
+        }
+    }
+
+    route("/request-publico-lista-avaliacoes") {
+        get {
+            val avaliacoes = transaction {
+                Avaliacoes.selectAll().map {
+                    // Busca o título do jogo relacionado
+                    val tituloJogo = Games.selectAll().find { g -> g[Games.id].value == it[Avaliacoes.gameId] }?.get(Games.titulo) ?: ""
+                    // Busca o nome do autor
+                    val autorNome = Usuarios.selectAll().find { u -> u[Usuarios.id] == it[Avaliacoes.usuarioId] }?.get(Usuarios.nome) ?: ""
+                    AvaliacaoPublicaResponse(
+                        id = it[Avaliacoes.id].value,
+                        usuarioId = it[Avaliacoes.usuarioId],
+                        autor_nome = autorNome,
+                        gameId = it[Avaliacoes.gameId],
+                        nota = it[Avaliacoes.nota],
+                        resenha = it[Avaliacoes.resenha],
+                        visibilidade = it[Avaliacoes.visibilidade],
+                        data = it[Avaliacoes.data].toString(),
+                        titulo_jogo = tituloJogo
+                    )
+                }
+            }
+            call.respond(avaliacoes)
         }
     }
 }

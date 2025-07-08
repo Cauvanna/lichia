@@ -1,33 +1,117 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { mockGames } from '../data/mockData';
 import { Star, Heart, Play, Check, Clock, Plus, Calendar, Users, GamepadIcon, Edit, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useReviews } from '../context/ReviewContext';
 import { useAuth } from '../context/AuthContext';
 import ReviewModal from '../components/ui/ReviewModal';
+import ReviewCard from '../components/ui/ReviewCard';
 
 const GameDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { getGameReviews } = useReviews();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
   const [selectedScreenshot, setSelectedScreenshot] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [playStatus, setPlayStatus] = useState<string>('');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [game, setGame] = useState<any>(null);
+  const [gameReviews, setGameReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const game = mockGames.find(g => g.id === id);
-  const gameReviews = getGameReviews(id || '');
+  useEffect(() => {
+    const fetchGame = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError('');
+      try {
+        let reqBody: any = {
+          comunicacao: 'request-pagina-de-game',
+          id_jogo: parseInt(id, 10),
+        };
+        if (isAuthenticated && user && token) {
+          reqBody.username = user.username;
+          reqBody.token = token;
+        } else {
+          reqBody.username = '';
+          reqBody.token = '';
+        }
+        const response = await fetch('http://localhost:8080/request-pagina-de-game', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody)
+        });
+        if (!response.ok) throw new Error('Erro ao buscar dados do jogo');
+        const data = await response.json();
+        if (data.mensagem) throw new Error(data.mensagem);
+        setGame({
+          ...data,
+          id: String(data.id),
+          title: data.titulo,
+          developer: data.publisher,
+          releaseYear: data.anoLancamento,
+          genres: typeof data.genero === 'string' ? data.genero.split(',').map((g: string) => g.trim()) : [],
+          // Usa a imagem da pasta public/covers se existir
+          coverImage: `/covers/${data.id}.jpg`,
+          rating: data.nota_media || 0,
+//           description: data.description || `Um jogo de ${data.genero} lançado em ${data.anoLancamento}.`,
+          // outros campos opcionais podem ser mapeados aqui
+        });
+      } catch (err: any) {
+        setError(err.message || 'Erro ao buscar dados do jogo');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGame();
+    // Busca avaliações do jogo
+    const fetchReviews = async () => {
+      if (!id) return;
+      try {
+        const reqBody: any = {
+          comunicacao: 'request-lista-de-avaliacoes',
+          id_jogo: parseInt(id, 10),
+          username: isAuthenticated && user ? user.username : '',
+          token: isAuthenticated && user && token ? token : ''
+        };
+        const response = await fetch('http://localhost:8080/request-lista-de-avaliacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody)
+        });
+        if (!response.ok) throw new Error('Erro ao buscar avaliações do jogo');
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setGameReviews(data);
+        } else {
+          setGameReviews([]);
+        }
+      } catch (err) {
+        setGameReviews([]);
+      }
+    };
+    fetchReviews();
+  }, [id, isAuthenticated, user, token]);
+
   const isWishlisted = game ? isInWishlist(game.id) : false;
 
-  if (!game) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <span className="text-white text-lg">Carregando dados do jogo...</span>
+      </div>
+    );
+  }
+
+  if (error || !game) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Game não encontrado</h1>
-          <button 
+          <h1 className="text-2xl font-bold text-white mb-4">{error || 'Game não encontrado'}</h1>
+          <button
             onClick={() => navigate('/')}
             className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
@@ -80,191 +164,89 @@ const GameDetail: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           Voltar
         </button>
-
-        {/* Game Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <div className="lg:col-span-1">
-            <img
-              src={game.coverImage}
-              alt={game.title}
-              className="w-full max-w-sm mx-auto rounded-lg shadow-xl"
-            />
-          </div>
-
-          <div className="lg:col-span-2">
-            <h1 className="text-4xl font-bold text-white mb-4">{game.title}</h1>
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                <span className="text-white font-medium text-lg">{game.rating}</span>
-                <span className="text-gray-400">({gameReviews.length} avaliações)</span>
-              </div>
-
-              <div className="flex items-center gap-1 text-gray-400">
-                <Calendar className="w-4 h-4" />
-                <span>{game.releaseYear}</span>
-              </div>
-
-              <div className="flex items-center gap-1 text-gray-400">
-                <Users className="w-4 h-4" />
-                <span>{game.developer}</span>
-              </div>
+        {/* Dados do jogo */}
+        {game && (
+          <div className="flex flex-col lg:flex-row w-full min-w-[320px] max-w-3xl mx-auto">
+            {/* Imagem do jogo */}
+            <div className="flex flex-col items-center justify-start lg:mr-8 mb-6 lg:mb-0">
+              <img
+                src={game.coverImage}
+                alt={game.title}
+                className="w-64 h-64 object-cover rounded-xl border-4 border-lichia-from"
+              />
             </div>
-
-            <div className="flex flex-wrap gap-2 mb-6">
-              {game.genres.map((genre, index) => (
-                <span key={index} className="bg-lichia-from text-white px-3 py-1 rounded-full text-sm">
-                  {genre}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-6">
-              {game.platforms.map((platform, index) => (
-                <span key={index} className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                  <GamepadIcon className="w-4 h-4" />
-                  {platform}
-                </span>
-              ))}
-            </div>
-
-            <p className="text-gray-300 leading-relaxed mb-6">{game.description}</p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <select
-                value={playStatus}
-                onChange={(e) => {
-                  if (!isAuthenticated) {
-                    navigate('/login');
-                    return;
-                  }
-                  setPlayStatus(e.target.value);
-                }}
-                className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                <option value="">Adicionar à Library</option>
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+            {/* Dados do jogo ao lado da imagem */}
+            <div className="flex-1 flex flex-col">
+              <h2 className="text-3xl font-bold text-white mb-2">{game.title}</h2>
+              <div className="mb-4 flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-400" />
+                <span className="text-white font-semibold text-lg">{game.rating?.toFixed(1) ?? '0.0'}</span>
+                <span className="text-gray-400 text-sm">Nota média</span>
+              </div>
+              <div className="mb-4 flex items-center gap-2">
+                <Heart className="w-5 h-5 text-lichia-from" />
+                <span className="text-gray-300 text-sm">Desejado por <span className="font-bold text-white">{game.quant_desejantes ?? 0}</span> jogadores</span>
+              </div>
+              <div className="mb-4">
+                <span className="text-gray-400">{game.developer} • {game.releaseYear}</span>
+              </div>
+              <div className="mb-4 flex flex-wrap gap-2">
+                {game.genres && game.genres.map((genre: string, idx: number) => (
+                  <span key={idx} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">{genre}</span>
                 ))}
-              </select>
-
-              <button
-                onClick={handleWishlistToggle}
-                className={`font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                  isWishlisted
-                    ? 'bg-lichia-from hover:bg-lichia-to text-white'
-                    : 'bg-gray-700 hover:bg-gray-600 text-white'
-                }`}
-              >
-                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
-                {isWishlisted ? 'Na Lista de Desejos' : 'Adicionar aos Desejos'}
-              </button>
-
-              <button
-                onClick={handleReviewClick}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                Criar Avaliação
-              </button>
-            </div>
-
-            {/* Rating */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3">Avaliar este jogo</h3>
-              <div className="flex items-center gap-2">
-                {[...Array(5)].map((_, i) => (
+              </div>
+              <div className="mb-4">
+                <span className="text-gray-400">{game.consoleLancamento}</span>
+              </div>
+              <div className="mb-4">
+                <span className="text-gray-400">{game.description}</span>
+              </div>
+              {/* Botão Adicionar à Lista de Desejos */}
+              <div className="flex flex-col gap-2 mb-4 w-2/3 max-w-xs">
+                <button
+                  onClick={handleWishlistToggle}
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${isWishlisted ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-red-500 hover:text-white'}`}
+                >
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-white' : ''}`} />
+                  {isWishlisted ? 'Remover da Wishlist' : 'Adicionar à Lista de Desejos'}
+                </button>
+                {/* Botão para adicionar avaliação */}
+                {isAuthenticated && (
                   <button
-                    key={i}
-                    onClick={() => handleRatingClick(i + 1)}
-                    className="hover:scale-110 transition-transform"
+                    onClick={handleReviewClick}
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium bg-lichia-from text-white hover:bg-lichia-to transition-colors"
                   >
-                    <Star
-                      className={`w-6 h-6 ${
-                        i < userRating
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-gray-600 hover:text-yellow-400'
-                      }`}
-                    />
+                    <Edit className="w-5 h-5" />
+                    Adicionar Avaliação
                   </button>
-                ))}
-                {userRating > 0 && (
-                  <span className="text-white font-medium ml-2">{userRating}/5</span>
                 )}
               </div>
-              {!isAuthenticated && (
-                <p className="text-gray-400 text-sm mt-2">
-                  <button onClick={() => navigate('/login')} className="text-lichia-from hover:text-lichia-to">
-                    Faça login
-                  </button> para avaliar este jogo
-                </p>
-              )}
             </div>
+          </div>
+        )}
+        {/* Lista simples de avaliações abaixo dos dados do jogo */}
+        <div className="mt-8 max-w-3xl mx-auto">
+          <h3 className="text-xl font-bold text-white mb-4">Avaliações do Jogo</h3>
+          <div className="space-y-4">
+            {gameReviews.length === 0 ? (
+              <span className="text-gray-400">Nenhuma avaliação registrada para este jogo ainda.</span>
+            ) : (
+              gameReviews.map((review, idx) => (
+                <div key={idx} className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-white font-semibold mb-1">{review.autor || review.autor_nome}</div>
+                  <div className="text-gray-300 mb-2">Nota: <span className="font-bold">{review.nota}</span></div>
+                  <div className="text-gray-200">{review.resenha}</div>
+                </div>
+              ))
+            )}
           </div>
         </div>
-
-        {/* Screenshots */}
-        {game.screenshots && game.screenshots.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Screenshots</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {game.screenshots.map((screenshot, index) => (
-                <img
-                  key={index}
-                  src={screenshot}
-                  alt={`${game.title} screenshot ${index + 1}`}
-                  className={`rounded-lg cursor-pointer transition-all hover:scale-105 ${
-                    selectedScreenshot === index ? 'ring-2 ring-lichia-from' : ''
-                  }`}
-                  onClick={() => setSelectedScreenshot(index)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Quick Links */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate(`/game/${id}/wishers`)}
-              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-4 transition-colors text-left"
-            >
-              <div className="flex items-center gap-3">
-                <Heart className="w-6 h-6 text-lichia-from" />
-                <div>
-                  <h3 className="text-white font-semibold">Lista de Desejantes</h3>
-                  <p className="text-gray-400 text-sm">Veja quem deseja este jogo</p>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => navigate(`/game/${id}/reviews`)}
-              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-4 transition-colors text-left"
-            >
-              <div className="flex items-center gap-3">
-                <MessageCircle className="w-6 h-6 text-lichia-from" />
-                <div>
-                  <h3 className="text-white font-semibold">Todas as Avaliações</h3>
-                  <p className="text-gray-400 text-sm">{gameReviews.length} avaliações</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </section>
+        <ReviewModal
+          game={game}
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+        />
       </div>
-
-      {/* Review Modal */}
-      <ReviewModal
-        game={game}
-        isOpen={isReviewModalOpen}
-        onClose={() => setIsReviewModalOpen(false)}
-      />
     </div>
   );
 };

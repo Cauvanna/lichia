@@ -44,99 +44,73 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, senha: string): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
-    
     try {
-      // Create JSON for backend
       const loginRequest = {
         comunicacao: "login",
         username,
         senha
       };
-      
-      console.log('Login request JSON:', JSON.stringify(loginRequest, null, 2));
-      
-      // Simulate backend response for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login response
-      const mockResponse = {
-        comunicacao: "login",
-        autenticado: true,
-        token: `user-${username}-logged`
-      };
-      
-      if (mockResponse.autenticado) {
-        const mockUser: User = {
-          id: '1',
+      const response = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginRequest)
+      });
+      const data = await response.json();
+      if (data.autenticado) {
+        // Usa o id_usuario retornado pelo backend
+        const loggedUser: User = {
+          id: data.id_usuario ? String(data.id_usuario) : '1',
           username,
           displayName: username.charAt(0).toUpperCase() + username.slice(1),
           avatar: 'https://images.pexels.com/photos/1040160/pexels-photo-1040160.jpeg?auto=compress&cs=tinysrgb&w=150',
-          bio: 'Gaming enthusiast and reviewer',
+          bio: '',
           visibilidade: true,
-          dataNascimento: '1990-01-01',
-          dataCadastro: new Date().toISOString()
+          dataNascimento: '',
+          dataCadastro: ''
         };
-        
-        setUser(mockUser);
-        setToken(mockResponse.token);
-        localStorage.setItem('token', mockResponse.token);
-        
-        return { success: true };
+        setUser(loggedUser);
+        setToken(data.token);
+        localStorage.setItem('token', data.token);
+        return { success: true, message: data.mensagem };
       } else {
-        return { success: false, message: 'Invalid username or password' };
+        return { success: false, message: data.mensagem || 'Usuário ou senha incorretos.' };
       }
     } catch (error) {
-      return { success: false, message: 'Login failed. Please try again.' };
+      return { success: false, message: 'Erro ao fazer login. Tente novamente.' };
     } finally {
       setIsLoading(false);
     }
   };
 
   const register = async (
-    username: string, 
-    senha: string, 
-    dataNascimento: string, 
+    username: string,
+    senha: string,
+    dataNascimento: string,
     visibilidade: boolean
   ): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
-    
     try {
-      // Create JSON for backend
+      // Monta o JSON conforme o backend espera
       const registerRequest = {
-        comunicacao: "registro-usuario",
+        comunicacao: "registro",
         username,
         senha,
         dataNascimento,
         visibilidade
       };
-      
-      console.log('Register request JSON:', JSON.stringify(registerRequest, null, 2));
-      
-      // Simulate backend response
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock response - simulate success or failure
-      const isUsernameAvailable = !['admin', 'test', 'user'].includes(username.toLowerCase());
-      
-      if (isUsernameAvailable) {
-        const mockResponse = {
-          comunicacao: "registro-usuario",
-          registrado: true,
-          mensagem: "Usuario registrado com sucesso!"
-        };
-        
-        return { success: true, message: mockResponse.mensagem };
+      const response = await fetch('http://localhost:8080/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registerRequest)
+      });
+      const data = await response.json();
+      if (data.registrado) {
+        return { success: true, message: data.mensagem };
       } else {
-        const mockResponse = {
-          comunicacao: "registro-usuario",
-          registrado: false,
-          mensagem: "Usuario com mesmo nome ja registrado"
-        };
-        
-        return { success: false, message: mockResponse.mensagem };
+        return { success: false, message: data.mensagem };
       }
     } catch (error) {
-      return { success: false, message: 'Registration failed. Please try again.' };
+      return { success: false, message: 'Erro ao registrar. Tente novamente.' };
     } finally {
       setIsLoading(false);
     }
@@ -144,19 +118,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     if (user && token) {
-      // Create JSON for backend
       const logoutRequest = {
         comunicacao: "logout",
         username: user.username,
         token
       };
-      
-      console.log('Logout request JSON:', JSON.stringify(logoutRequest, null, 2));
-      
-      // Simulate backend call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      try {
+        const response = await fetch('http://localhost:8080/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logoutRequest)
+        });
+        const data = await response.json();
+        // Opcional: você pode checar data.autenticado ou data.mensagem para feedback
+      } catch (error) {
+        // Opcional: mostrar erro ao usuário
+      }
     }
-    
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');

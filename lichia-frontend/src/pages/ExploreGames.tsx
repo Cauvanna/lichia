@@ -1,39 +1,53 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { mockGames } from '../data/mockData';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Grid, List, Gamepad2 } from 'lucide-react';
 import GameCard from '../components/ui/GameCard';
+import { useGames } from '../context/GameContext';
 
 const ExploreGames: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { games, isLoading } = useGames();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('title');
+  const [sortBy, setSortBy] = useState('rating'); // Altera o valor inicial para 'rating'
   const [filterGenre, setFilterGenre] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Get all unique genres for filtering
-  const allGenres = Array.from(new Set(mockGames.flatMap(game => game.genres)));
+  // Extrai todos os gêneros únicos dos games vindos do backend
+  const allGenres = Array.from(new Set(games.flatMap(game => {
+    if (Array.isArray(game.genres)) return game.genres;
+    if (typeof game.genero === 'string') return game.genero.split(',').map(g => g.trim());
+    return [];
+  }))).filter(Boolean);
 
-  // Filter and sort games
-  const filteredGames = mockGames
+  // Lê o termo de busca da query string ao carregar a página
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const search = params.get('search') || '';
+    const sort = params.get('sort') || 'rating'; // Altera o valor padrão para 'rating'
+    setSearchTerm(search);
+    setSortBy(sort);
+  }, [location.search]);
+
+  // Filtro e ordenação dos games
+  const filteredGames = games
     .filter(game => {
-      // Adicionando uma verificação de segurança para evitar erros
-      if (!game || typeof game.title !== 'string' || typeof game.developer !== 'string') {
-        return false;
-      }
-      const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           game.developer.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGenre = filterGenre === 'all' || game.genres.includes(filterGenre);
+      const title = game.title || game.titulo || '';
+      const developer = game.developer || game.publisher || '';
+      const genres = game.genres || (typeof game.genero === 'string' ? game.genero.split(',').map(g => g.trim()) : []);
+      const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        developer.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesGenre = filterGenre === 'all' || genres.includes(filterGenre);
       return matchesSearch && matchesGenre;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'title':
-          return a.title.localeCompare(b.title);
+          return (a.title || a.titulo || '').localeCompare(b.title || b.titulo || '');
         case 'rating':
           return (b.rating || 0) - (a.rating || 0);
         case 'releaseYear':
-          return (b.releaseYear || 0) - (a.releaseYear || 0);
+          return (b.releaseYear || b.anoLancamento || 0) - (a.releaseYear || a.anoLancamento || 0);
         default:
           return 0;
       }
@@ -45,12 +59,44 @@ const ExploreGames: React.FC = () => {
 
   const GameListItem: React.FC<{ game: any }> = ({ game }) => (
     <div
-      className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer group"
+      className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer group flex items-center gap-4 mb-2"
       onClick={() => handleGameClick(game.id)}
     >
-      {/* ... (código do GameListItem) ... */}
+      <img
+        src={game.coverImage || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover_qhhlj6.jpg'}
+        alt={game.title}
+        className="w-16 h-20 object-cover rounded"
+      />
+      <div className="flex-1 min-w-0">
+        <h3 className="text-white font-bold text-lg mb-1 truncate">{game.title}</h3>
+        <p className="text-gray-400 text-sm mb-2">{game.developer} • {game.releaseYear}</p>
+        <div className="flex items-center gap-4 mb-2">
+          <div className="flex items-center gap-1">
+            <span className="inline-flex items-center gap-1">
+              <span className="text-yellow-400 font-bold">★</span>
+              <span className="text-white font-medium">{game.rating}</span>
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {game.genres && game.genres.slice(0, 2).map((genre: string, idx: number) => (
+              <span key={idx} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">
+                {genre}
+              </span>
+            ))}
+          </div>
+        </div>
+        <p className="text-gray-400 text-sm line-clamp-2">{game.description}</p>
+      </div>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="text-white text-lg">Carregando jogos...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -138,11 +184,11 @@ const ExploreGames: React.FC = () => {
 
         {/* Games Grid/List */}
         {filteredGames.length > 0 ? (
-          <div className={`${
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+          <div className={
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
               : 'space-y-4'
-          }`}>
+          }>
             {filteredGames.map((game) => (
               viewMode === 'grid' ? (
                 <GameCard
@@ -163,7 +209,7 @@ const ExploreGames: React.FC = () => {
               <h3 className="text-xl font-bold text-white mb-2">Nenhum game encontrado</h3>
               <p className="text-gray-400 mb-6">
                 Tente ajustar sua busca ou filtros
-              </p>
+              </p>s
             </div>
           </div>
         )}
