@@ -100,8 +100,9 @@ const Profile: React.FC = () => {
         {/* Profile Header */}
         <div className="bg-gray-800 rounded-lg p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            {/* Avatar com as duas primeiras letras do nome do usuário */}
             <img
-              src={avatar}
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent((displayName || '').slice(0,2) || 'US')}`}
               alt={displayName}
               className="w-32 h-32 rounded-full object-cover ring-4 ring-lichia-from bg-gray-300"
             />

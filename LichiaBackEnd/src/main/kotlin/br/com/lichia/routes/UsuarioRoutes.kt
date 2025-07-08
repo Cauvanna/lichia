@@ -242,11 +242,13 @@ data class RegistroUsuarioResponse(
 data class AvaliacaoPublicaResponse(
     val id: Int,
     val usuarioId: Int,
+    val autor_nome: String, // novo campo
     val gameId: Int,
     val nota: Double?,
     val resenha: String?,
     val visibilidade: Boolean,
-    val data: String
+    val data: String,
+    val titulo_jogo: String // novo campo
 )
 
 /******************************************************************************************************************/
@@ -847,14 +849,20 @@ fun Route.userRoutes() {
         get {
             val avaliacoes = transaction {
                 Avaliacoes.selectAll().map {
+                    // Busca o título do jogo relacionado
+                    val tituloJogo = Games.selectAll().find { g -> g[Games.id].value == it[Avaliacoes.gameId] }?.get(Games.titulo) ?: ""
+                    // Busca o nome do autor
+                    val autorNome = Usuarios.selectAll().find { u -> u[Usuarios.id] == it[Avaliacoes.usuarioId] }?.get(Usuarios.nome) ?: ""
                     AvaliacaoPublicaResponse(
                         id = it[Avaliacoes.id].value,
                         usuarioId = it[Avaliacoes.usuarioId],
+                        autor_nome = autorNome,
                         gameId = it[Avaliacoes.gameId],
                         nota = it[Avaliacoes.nota],
                         resenha = it[Avaliacoes.resenha],
                         visibilidade = it[Avaliacoes.visibilidade],
-                        data = it[Avaliacoes.data].toString()
+                        data = it[Avaliacoes.data].toString(),
+                        titulo_jogo = tituloJogo
                     )
                 }
             }

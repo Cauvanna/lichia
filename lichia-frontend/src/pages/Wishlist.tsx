@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart, Search, Grid, List, Star, Trash2, ArrowLeft } from 'lucide-react';
+import { Heart, Search, ArrowLeft } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useGames } from '../context/GameContext';
@@ -9,15 +9,17 @@ import GameCard from '../components/ui/GameCard';
 const Wishlist: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { wishlistItems, wishlistGames, removeFromWishlist, fetchWishlistFromBackend } = useWishlist();
+  const { wishlistItems, wishlistGames, removeFromWishlist, fetchWishlistFromBackend, isInWishlist, toggleWishlist } = useWishlist();
   const { isAuthenticated, user } = useAuth();
   const { games, isLoading: gamesLoading } = useGames();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('dateAdded');
   const [filterGenre, setFilterGenre] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode] = useState<'list'>('list'); // Fixa o modo de exibição como 'list'
   const [wishlistLoading, setWishlistLoading] = useState(true);
   const [rawWishlistJson, setRawWishlistJson] = useState<any>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [showLoginNoticeId, setShowLoginNoticeId] = useState<string | null>(null);
 
   // Determine if this is the current user's wishlist or another user's
   const isOwnWishlist = !id || (isAuthenticated && user?.id === id);
@@ -145,62 +147,53 @@ const Wishlist: React.FC = () => {
               ))}
             </select>
             <div />
-            <div className="flex items-center gap-2 justify-end">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${
-                  viewMode === 'grid'
-                    ? 'bg-lichia-from text-white'
-                    : 'bg-gray-700 text-gray-400 hover:text-white'
-                }`}
-              >
-                <Grid className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${
-                  viewMode === 'list'
-                    ? 'bg-lichia-from text-white'
-                    : 'bg-gray-700 text-gray-400 hover:text-white'
-                }`}
-              >
-                <List className="w-5 h-5" />
-              </button>
-            </div>
+            {/* Removido o seletor de modo de exibição (grid/list) */}
           </div>
         </div>
         {/* Lista de jogos */}
         {filteredGames.length > 0 ? (
-          <div className={`$
-            {viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-              : 'space-y-4'
-          }`}>
-            {filteredGames.map((game) => (
-              viewMode === 'grid' ? (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  onGameClick={() => navigate(`/game/${game.id}`)}
-                  showStatus={false}
-                />
-              ) : (
+          <div className="space-y-4">
+            {filteredGames.map((game) => {
+              const isWishlisted = isInWishlist(game.id);
+              return (
                 <div key={game.id} className="bg-gray-800 rounded-lg p-4 flex items-center gap-4">
                   <img src={game.coverImage} alt={game.titulo} className="w-16 h-16 object-cover rounded" />
                   <div className="flex-1">
                     <h3 className="text-white font-bold text-lg mb-1">{game.titulo}</h3>
                     <p className="text-gray-400 text-sm">{game.publisher} • {game.anoLancamento}</p>
                   </div>
-                  <button
-                    onClick={() => removeFromWishlist(game.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
-                    title="Remover da wishlist"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!isAuthenticated) {
+                          setShowLoginNoticeId(game.id);
+                          setTimeout(() => setShowLoginNoticeId(null), 2500);
+                          return;
+                        }
+                        setLoadingId(game.id);
+                        await toggleWishlist(game.id);
+                        setLoadingId(null);
+                      }}
+                      disabled={loadingId === game.id}
+                      className={`rounded-full p-2 transition-all duration-200 hover:scale-110 ${
+                        isWishlisted
+                          ? 'bg-red-500 text-white'
+                          : 'bg-black/50 text-white hover:bg-red-500'
+                      }`}
+                      title={isWishlisted ? 'Remover da wishlist' : 'Adicionar à wishlist'}
+                    >
+                      <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-white' : ''}`} />
+                    </button>
+                    {showLoginNoticeId === game.id && (
+                      <div className="absolute top-12 right-0 bg-gray-900 text-white text-xs rounded shadow-lg px-4 py-2 z-50 border border-lichia-from animate-fade-in">
+                        Registre-se e faça login para adicionar um jogo à sua Lista de Desejos
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-16">
@@ -217,13 +210,6 @@ const Wishlist: React.FC = () => {
                 Explorar Jogos
               </button>
             </div>
-          </div>
-        )}
-        {/* DEBUG: Exibe o JSON bruto recebido do backend */}
-        {rawWishlistJson && (
-          <div className="bg-gray-800 text-gray-200 p-4 mb-4 rounded-lg overflow-x-auto text-xs">
-            <strong>DEBUG JSON recebido do backend:</strong>
-            <pre>{JSON.stringify(rawWishlistJson, null, 2)}</pre>
           </div>
         )}
       </div>

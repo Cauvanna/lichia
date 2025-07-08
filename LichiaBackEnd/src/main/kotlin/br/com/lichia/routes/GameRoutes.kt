@@ -87,22 +87,30 @@ fun Route.gameRoutes() {
     route("/games") {
         get {
             val gameList = transaction {
-                Games.selectAll().map {
-                    GameDTO(
-                        id = it[Games.id].value,
-                        titulo = it[Games.titulo],
-                        genero = it[Games.genero],
-                        anoLancamento = it[Games.anoLancamento],
-                        consoleLancamento = it[Games.consoleLancamento],
-                        ehHandheld = it[Games.ehHandheld],
-                        maxJogadores = it[Games.maxJogadores],
-                        temOnline = it[Games.temOnline],
-                        publisher = it[Games.publisher],
-                        temSequencia = it[Games.temSequencia],
-                        precoUsual = it[Games.precoUsual],
-                        duracaoMainStoryAverage = it[Games.duracaoMainStoryAverage],
-                        duracaoMainStoryExtras = it[Games.duracaoMainStoryExtras],
-                        duracaoCompletionistAverage = it[Games.duracaoCompletionistAverage]
+                Games.selectAll().map { gameRow ->
+                    val gameId = gameRow[Games.id].value
+                    val quantDesejantes = Desejos.selectAll().count { desejo -> desejo[Desejos.gameId] == gameId }
+                    val avaliacoes = br.com.lichia.database.Avaliacoes.selectAll().filter { av -> av[br.com.lichia.database.Avaliacoes.gameId] == gameId && av[br.com.lichia.database.Avaliacoes.nota] != null }
+                    val notaMedia = if (avaliacoes.isNotEmpty()) {
+                        avaliacoes.map { av -> av[br.com.lichia.database.Avaliacoes.nota]!! }.average()
+                    } else 0.0
+                    br.com.lichia.dto.GameDetalhadoDTO(
+                        id = gameRow[Games.id].value,
+                        titulo = gameRow[Games.titulo],
+                        genero = gameRow[Games.genero],
+                        anoLancamento = gameRow[Games.anoLancamento],
+                        consoleLancamento = gameRow[Games.consoleLancamento],
+                        ehHandheld = gameRow[Games.ehHandheld],
+                        maxJogadores = gameRow[Games.maxJogadores],
+                        temOnline = gameRow[Games.temOnline],
+                        publisher = gameRow[Games.publisher],
+                        temSequencia = gameRow[Games.temSequencia],
+                        precoUsual = gameRow[Games.precoUsual],
+                        duracaoMainStoryAverage = gameRow[Games.duracaoMainStoryAverage],
+                        duracaoMainStoryExtras = gameRow[Games.duracaoMainStoryExtras],
+                        duracaoCompletionistAverage = gameRow[Games.duracaoCompletionistAverage],
+                        quant_desejantes = quantDesejantes,
+                        nota_media = notaMedia
                     )
                 }
             }

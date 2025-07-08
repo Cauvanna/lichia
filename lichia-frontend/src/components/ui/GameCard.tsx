@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Game } from '../../types';
 import { Star, Heart, Play, Check, Clock, Plus } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface GameCardProps {
   game: Game;
@@ -13,6 +14,8 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(game.id);
   const [loading, setLoading] = useState(false);
+  const [showLoginNotice, setShowLoginNotice] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const getStatusIcon = () => {
     switch (game.playStatus) {
@@ -46,6 +49,11 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isAuthenticated) {
+      setShowLoginNotice(true);
+      setTimeout(() => setShowLoginNotice(false), 2500);
+      return;
+    }
     setLoading(true);
     await toggleWishlist(game.id);
     setLoading(false);
@@ -61,6 +69,9 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
           src={game.coverImage}
           alt={game.title}
           className="w-full h-64 object-cover"
+          onError={e => {
+            (e.currentTarget as HTMLImageElement).src = 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover_qhhlj6.jpg';
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -76,6 +87,11 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
         >
           <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
         </button>
+        {showLoginNotice && (
+          <div className="absolute top-12 right-3 bg-gray-900 text-white text-xs rounded shadow-lg px-4 py-2 z-50 border border-lichia-from animate-fade-in">
+            Registre-se e faça login para adicionar um jogo à sua Lista de Desejos
+          </div>
+        )}
 
         {showStatus && game.playStatus && (
           <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-2">
@@ -92,7 +108,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick, showStatus = tru
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-white font-medium">{game.rating}</span>
+            <span className="text-white font-medium">{game.rating?.toFixed(1)}</span>
           </div>
 
           {game.userRating && (

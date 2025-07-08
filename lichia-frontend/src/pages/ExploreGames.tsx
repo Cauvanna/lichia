@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Grid, List, Gamepad2 } from 'lucide-react';
 import GameCard from '../components/ui/GameCard';
 import { useGames } from '../context/GameContext';
 
 const ExploreGames: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { games, isLoading } = useGames();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('title');
+  const [sortBy, setSortBy] = useState('rating'); // Altera o valor inicial para 'rating'
   const [filterGenre, setFilterGenre] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -18,6 +19,15 @@ const ExploreGames: React.FC = () => {
     if (typeof game.genero === 'string') return game.genero.split(',').map(g => g.trim());
     return [];
   }))).filter(Boolean);
+
+  // Lê o termo de busca da query string ao carregar a página
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const search = params.get('search') || '';
+    const sort = params.get('sort') || 'rating'; // Altera o valor padrão para 'rating'
+    setSearchTerm(search);
+    setSortBy(sort);
+  }, [location.search]);
 
   // Filtro e ordenação dos games
   const filteredGames = games

@@ -68,9 +68,9 @@ const Header: React.FC = () => {
                   to="/profile"
                   className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 rounded-lg p-2 transition-colors"
                 >
-                  {/* Substitui o avatar pelo logo da lichia */}
+                  {/* Avatar com as duas primeiras letras do nome do usuário */}
                   <img
-                    src={lichiaLogoUrl}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName?.slice(0,2) || 'US')}`}
                     alt="Avatar do usuário"
                     className="w-6 h-6 rounded-full object-cover"
                   />

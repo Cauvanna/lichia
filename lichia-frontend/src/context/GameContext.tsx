@@ -51,7 +51,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         title: game.titulo || '',
         developer: game.publisher || '',
         releaseYear: game.anoLancamento || 0,
-        coverImage: game.coverImage || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover_qhhlj6.jpg',
+        // Aqui faz o mapeamento para a imagem da pasta public/covers
+        coverImage: `/covers/${game.id}.jpg`,
         rating: game.nota_media || 0,
         description: `Um jogo de ${game.genero} lançado em ${game.anoLancamento}.`,
       }));
