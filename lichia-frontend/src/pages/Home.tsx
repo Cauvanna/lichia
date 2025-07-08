@@ -4,12 +4,42 @@ import GameCard from '../components/ui/GameCard';
 import ReviewCard from '../components/ui/ReviewCard';
 import ActivityFeed from '../components/ui/ActivityFeed';
 import { mockGames, mockReviews, mockActivities } from '../data/mockData';
-import { TrendingUp, Star, Clock, Sparkles, Gamepad2, UserPlus, LogIn } from 'lucide-react';
+import { TrendingUp, Star, Clock, Sparkles, Gamepad2, UserPlus, LogIn, Heart, Users, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useGames } from '../context/GameContext';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { games } = useGames();
+  const [usuariosAtivos, setUsuariosAtivos] = React.useState<number>(0);
+  const [avaliacoesRegistradas, setAvaliacoesRegistradas] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    // Busca o número de usuários ativos do backend
+    fetch('http://localhost:8080/request-publico-lista-usuarios')
+      .then(res => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUsuariosAtivos(data.length);
+        } else {
+          setUsuariosAtivos(0);
+        }
+      })
+      .catch(() => setUsuariosAtivos(0));
+
+    // Busca o número de avaliações registradas do backend
+    fetch('http://localhost:8080/request-publico-lista-avaliacoes')
+      .then(res => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAvaliacoesRegistradas(data.length);
+        } else {
+          setAvaliacoesRegistradas(0);
+        }
+      })
+      .catch(() => setAvaliacoesRegistradas(0));
+  }, []);
 
   const handleGameClick = (gameId: string) => {
     navigate(`/game/${gameId}`);
@@ -39,7 +69,7 @@ const Home: React.FC = () => {
             <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
               Acompanhe sua jornada gaming, descubra jogos, compartilhe suas impressões e conecte-se com outros gamers na sua plataforma social de games favorita
             </p>
-            
+
             {!isAuthenticated && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
@@ -85,9 +115,9 @@ const Home: React.FC = () => {
                 >
                   <div className="flex items-center gap-4 mb-4">
                     <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
-                      <Star className="w-6 h-6 text-white" />
+                      <Heart className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-white">Minha Library</h3>
+                    <h3 className="text-xl font-bold text-white">Lista de Desejos</h3>
                   </div>
                   <p className="text-gray-400">Veja seus jogos e avaliações</p>
                 </button>
@@ -98,7 +128,8 @@ const Home: React.FC = () => {
                 >
                   <div className="flex items-center gap-4 mb-4">
                     <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-3 group-hover:scale-110 transition-transform">
-                      <TrendingUp className="w-6 h-6 text-white" />
+                      {/* Substitui TrendingUp por UserPlus para indicar perfil de usuário */}
+                      <UserPlus className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-white">Meu Painel</h3>
                   </div>
@@ -132,26 +163,6 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Personalized Recommendations */}
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Recomendados</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {recommendedGames.map((game) => (
-                  <GameCard
-                    key={game.id}
-                    game={game}
-                    onGameClick={handleGameClick}
-                  />
-                ))}
-              </div>
-            </section>
-
             {/* Recent Reviews */}
             <section>
               <div className="flex items-center gap-3 mb-6">
@@ -180,11 +191,13 @@ const Home: React.FC = () => {
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <div className="bg-gradient-to-r from-lichia-from to-lichia-to rounded-lg p-2">
-                  <Clock className="w-6 h-6 text-white" />
+                  {/* Troca o ícone de relógio por um de estatísticas (TrendingUp) */}
+                  <TrendingUp className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Atividade Recente</h2>
+                {/* Troca o título para 'Estatísticas da Plataforma' */}
+                <h2 className="text-xl font-bold text-white">Estatísticas da Plataforma</h2>
               </div>
-              
+
               <ActivityFeed
                 activities={recentActivities}
                 onUserClick={handleUserClick}
@@ -194,23 +207,18 @@ const Home: React.FC = () => {
 
             {/* Platform Stats */}
             <section className="bg-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Estatísticas da Plataforma</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Games Catalogados</span>
-                  <span className="text-white font-bold">2,847</span>
+                  <span className="text-white font-bold">{games.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Usuários Ativos</span>
-                  <span className="text-white font-bold">15,234</span>
+                  <span className="text-white font-bold">{usuariosAtivos}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Avaliações</span>
-                  <span className="text-white font-bold">89,156</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Listas de Desejos</span>
-                  <span className="text-white font-bold">234,567</span>
+                  <span className="text-gray-400">Avaliações Registradas</span>
+                  <span className="text-white font-bold">{avaliacoesRegistradas}</span>
                 </div>
               </div>
             </section>

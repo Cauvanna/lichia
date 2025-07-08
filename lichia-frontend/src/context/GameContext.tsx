@@ -45,6 +45,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         duracaoMainStoryAverage: game.duracaoMainStoryAverage || 0,
         duracaoMainStoryExtras: game.duracaoMainStoryExtras || 0,
         duracaoCompletionistAverage: game.duracaoCompletionistAverage || 0,
+        // Adiciona o campo genres como array
+        genres: typeof game.genero === 'string' ? game.genero.split(',').map((g: string) => g.trim()) : [],
+        // Campos de compatibilidade frontend
+        title: game.titulo || '',
+        developer: game.publisher || '',
+        releaseYear: game.anoLancamento || 0,
+        coverImage: game.coverImage || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover_qhhlj6.jpg',
+        rating: game.nota_media || 0,
+        description: `Um jogo de ${game.genero} lançado em ${game.anoLancamento}.`,
       }));
 
       setGames(formattedGames);

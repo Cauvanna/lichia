@@ -1,29 +1,22 @@
-// src/context/AuthContext.tsx (INTEGRADO)
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '../types'; // Supondo que você tenha um arquivo de tipos
-
-// Função auxiliar para chamadas de API
-async function apiCall(endpoint: string, body: object) {
-    try {
-        const response = await fetch(`http://localhost:8080${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-        });
-        return await response.json();
-    } catch (error) {
-        console.error(`Erro na chamada da API para ${endpoint}:`, error);
-        return { success: false, registrado: false, autenticado: false, mensagem: 'Erro de comunicação com o servidor.' };
-    }
+interface User {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  bio: string;
+  visibilidade: boolean;
+  dataNascimento: string;
+  dataCadastro: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (username: string, senha: string) => Promise<{ success: boolean; message?: string }>;
-  register: (username: string, senha: string, dataNascimento: string, visibilidade: boolean) => Promise<{ success: boolean; message?: string }>;
+  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  register: (username: string, password: string, dataNascimento: string, visibilidade: boolean) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -38,93 +31,126 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Começa true para checar o localStorage
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-  useEffect(() => {
-    // Carrega dados do usuário do localStorage ao iniciar a aplicação
-    try {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
-        }
-    } catch (error) {
-        console.error("Falha ao carregar dados do localStorage", error);
-        localStorage.clear(); // Limpa em caso de dados corrompidos
-    }
-    setIsLoading(false);
-  }, []);
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [isLoading, setIsLoading] = useState(false);
 
   const isAuthenticated = !!user && !!token;
 
-  const login = async (username: string, senha: string) => {
+  const login = async (username: string, senha: string): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
-    const body = { comunicacao: "login", username, senha };
-    const data = await apiCall('/login', body);
-
-    if (data.autenticado) {
-      // Busca os dados completos do usuário após o login bem-sucedido
-      const userDetailsResponse = await apiCall('/request-painel-usuario', {
-        comunicacao: "request-painel-usuario",
-        username: username,
-        token: data.token
-      });
-
-      const userData: User = {
-          id: userDetailsResponse.id,
-          username: userDetailsResponse.nome,
-          displayName: userDetailsResponse.nome,
-          avatar: https://avatar.vercel.sh/${userDetailsResponse.nome}.png, // Avatar genérico
-          bio: 'Bem-vindo à Lichia!',
-          visibilidade: userDetailsResponse.visibilidade,
-          dataNascimento: userDetailsResponse.data_nascimento,
-          dataCadastro: new Date(userDetailsResponse.data_cadastro * 1000).toISOString(),
+    try {
+      const loginRequest = {
+        comunicacao: "login",
+        username,
+        senha
       };
-
-      setUser(userData);
-      setToken(data.token);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      const response = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginRequest)
+      });
+      const data = await response.json();
+      if (data.autenticado) {
+        // Usa o id_usuario retornado pelo backend
+        const loggedUser: User = {
+          id: data.id_usuario ? String(data.id_usuario) : '1',
+          username,
+          displayName: username.charAt(0).toUpperCase() + username.slice(1),
+          avatar: 'https://images.pexels.com/photos/1040160/pexels-photo-1040160.jpeg?auto=compress&cs=tinysrgb&w=150',
+          bio: '',
+          visibilidade: true,
+          dataNascimento: '',
+          dataCadastro: ''
+        };
+        setUser(loggedUser);
+        setToken(data.token);
+        localStorage.setItem('token', data.token);
+        return { success: true, message: data.mensagem };
+      } else {
+        return { success: false, message: data.mensagem || 'Usuário ou senha incorretos.' };
+      }
+    } catch (error) {
+      return { success: false, message: 'Erro ao fazer login. Tente novamente.' };
+    } finally {
       setIsLoading(false);
-      return { success: true, message: data.mensagem };
-    } else {
-      setIsLoading(false);
-      return { success: false, message: data.mensagem };
     }
   };
 
-  const register = async (username: string, senha: string, dataNascimento: string, visibilidade: boolean) => {
+  const register = async (
+    username: string,
+    senha: string,
+    dataNascimento: string,
+    visibilidade: boolean
+  ): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
-    const body = { comunicacao: "registro-usuario", username, senha, dataNascimento, visibilidade };
-    const data = await apiCall('/registro', body);
-    setIsLoading(false);
-    return { success:
-
-data.registrado, message: data.mensagem };
+    try {
+      // Monta o JSON conforme o backend espera
+      const registerRequest = {
+        comunicacao: "registro",
+        username,
+        senha,
+        dataNascimento,
+        visibilidade
+      };
+      const response = await fetch('http://localhost:8080/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registerRequest)
+      });
+      const data = await response.json();
+      if (data.registrado) {
+        return { success: true, message: data.mensagem };
+      } else {
+        return { success: false, message: data.mensagem };
+      }
+    } catch (error) {
+      return { success: false, message: 'Erro ao registrar. Tente novamente.' };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = async () => {
-    setIsLoading(true);
+  const logout = async (): Promise<void> => {
     if (user && token) {
-        const body = { comunicacao: "logout", username: user.username, token };
-        await apiCall('/logout', body); // Não precisamos esperar a resposta
+      const logoutRequest = {
+        comunicacao: "logout",
+        username: user.username,
+        token
+      };
+      try {
+        const response = await fetch('http://localhost:8080/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logoutRequest)
+        });
+        const data = await response.json();
+        // Opcional: você pode checar data.autenticado ou data.mensagem para feedback
+      } catch (error) {
+        // Opcional: mostrar erro ao usuário
+      }
     }
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoading(false);
   };
 
-  const value = { user, token, isAuthenticated, login, register, logout, isLoading };
-
   return (
-    <AuthContext.Provider value={value}>
-      {!isLoading && children}
+    <AuthContext.Provider value={{
+      user,
+      token,
+      isAuthenticated,
+      login,
+      register,
+      logout,
+      isLoading
+    }}>
+      {children}
     </AuthContext.Provider>
   );
 };

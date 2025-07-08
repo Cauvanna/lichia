@@ -48,6 +48,9 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+
+    // para integração back front
+    implementation("io.ktor:ktor-server-cors-jvm:3.1.3")
 }
 
 tasks.test {

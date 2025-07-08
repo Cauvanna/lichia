@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { mockGames } from '../data/mockData';
 import { Star, Heart, Play, Check, Clock, Plus, Calendar, Users, GamepadIcon, Edit, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useReviews } from '../context/ReviewContext';
@@ -12,22 +11,79 @@ const GameDetail: React.FC = () => {
   const navigate = useNavigate();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { getGameReviews } = useReviews();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
   const [selectedScreenshot, setSelectedScreenshot] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [playStatus, setPlayStatus] = useState<string>('');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [game, setGame] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const game = mockGames.find(g => g.id === id);
+  useEffect(() => {
+    const fetchGame = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError('');
+      try {
+        let reqBody: any = {
+          comunicacao: 'request-pagina-de-game',
+          id_jogo: parseInt(id, 10),
+        };
+        if (isAuthenticated && user && token) {
+          reqBody.username = user.username;
+          reqBody.token = token;
+        } else {
+          reqBody.username = '';
+          reqBody.token = '';
+        }
+        const response = await fetch('http://localhost:8080/request-pagina-de-game', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody)
+        });
+        if (!response.ok) throw new Error('Erro ao buscar dados do jogo');
+        const data = await response.json();
+        if (data.mensagem) throw new Error(data.mensagem);
+        setGame({
+          ...data,
+          id: String(data.id),
+          title: data.titulo,
+          developer: data.publisher,
+          releaseYear: data.anoLancamento,
+          genres: typeof data.genero === 'string' ? data.genero.split(',').map((g: string) => g.trim()) : [],
+          coverImage: data.coverImage || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover_qhhlj6.jpg',
+          rating: data.nota_media || 0,
+          description: data.description || `Um jogo de ${data.genero} lançado em ${data.anoLancamento}.`,
+          // outros campos opcionais podem ser mapeados aqui
+        });
+      } catch (err: any) {
+        setError(err.message || 'Erro ao buscar dados do jogo');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGame();
+    // eslint-disable-next-line
+  }, [id, isAuthenticated, user, token]);
+
   const gameReviews = getGameReviews(id || '');
   const isWishlisted = game ? isInWishlist(game.id) : false;
 
-  if (!game) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <span className="text-white text-lg">Carregando dados do jogo...</span>
+      </div>
+    );
+  }
+
+  if (error || !game) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Game não encontrado</h1>
-          <button 
+          <h1 className="text-2xl font-bold text-white mb-4">{error || 'Game não encontrado'}</h1>
+          <button
             onClick={() => navigate('/')}
             className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
@@ -98,112 +154,41 @@ const GameDetail: React.FC = () => {
               <div className="flex items-center gap-1">
                 <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                 <span className="text-white font-medium text-lg">{game.rating}</span>
-                <span className="text-gray-400">({gameReviews.length} avaliações)</span>
               </div>
-
-              <div className="flex items-center gap-1 text-gray-400">
-                <Calendar className="w-4 h-4" />
-                <span>{game.releaseYear}</span>
-              </div>
-
-              <div className="flex items-center gap-1 text-gray-400">
-                <Users className="w-4 h-4" />
-                <span>{game.developer}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-6">
-              {game.genres.map((genre, index) => (
-                <span key={index} className="bg-lichia-from text-white px-3 py-1 rounded-full text-sm">
-                  {genre}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-6">
-              {game.platforms.map((platform, index) => (
-                <span key={index} className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                  <GamepadIcon className="w-4 h-4" />
-                  {platform}
-                </span>
-              ))}
-            </div>
-
-            <p className="text-gray-300 leading-relaxed mb-6">{game.description}</p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <select
-                value={playStatus}
-                onChange={(e) => {
-                  if (!isAuthenticated) {
-                    navigate('/login');
-                    return;
-                  }
-                  setPlayStatus(e.target.value);
-                }}
-                className="bg-lichia-from hover:bg-lichia-to text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                <option value="">Adicionar à Library</option>
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
               <button
                 onClick={handleWishlistToggle}
-                className={`font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                  isWishlisted
-                    ? 'bg-lichia-from hover:bg-lichia-to text-white'
-                    : 'bg-gray-700 hover:bg-gray-600 text-white'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${isWishlisted ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-red-500 hover:text-white'}`}
               >
-                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
-                {isWishlisted ? 'Na Lista de Desejos' : 'Adicionar aos Desejos'}
+                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-white' : ''}`} />
+                {isWishlisted ? 'Remover da Wishlist' : 'Adicionar à Wishlist'}
               </button>
-
-              <button
-                onClick={handleReviewClick}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                Criar Avaliação
-              </button>
-            </div>
-
-            {/* Rating */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3">Avaliar este jogo</h3>
-              <div className="flex items-center gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleRatingClick(i + 1)}
-                    className="hover:scale-110 transition-transform"
-                  >
-                    <Star
-                      className={`w-6 h-6 ${
-                        i < userRating
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-gray-600 hover:text-yellow-400'
-                      }`}
-                    />
-                  </button>
-                ))}
-                {userRating > 0 && (
-                  <span className="text-white font-medium ml-2">{userRating}/5</span>
-                )}
-              </div>
-              {!isAuthenticated && (
-                <p className="text-gray-400 text-sm mt-2">
-                  <button onClick={() => navigate('/login')} className="text-lichia-from hover:text-lichia-to">
-                    Faça login
-                  </button> para avaliar este jogo
-                </p>
+              {/* Botão para adicionar avaliação */}
+              {isAuthenticated && (
+                <button
+                  onClick={handleReviewClick}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-lichia-from text-white hover:bg-lichia-to transition-colors"
+                >
+                  <Edit className="w-5 h-5" />
+                  Adicionar Avaliação
+                </button>
               )}
             </div>
+
+            <div className="mb-4">
+              <span className="text-gray-400">{game.developer} • {game.releaseYear}</span>
+            </div>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {game.genres && game.genres.map((genre: string, idx: number) => (
+                <span key={idx} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">{genre}</span>
+              ))}
+            </div>
+            <div className="mb-4">
+              <span className="text-gray-400">{game.consoleLancamento}</span>
+            </div>
+            <div className="mb-4">
+              <span className="text-gray-400">{game.description}</span>
+            </div>
+            {/* Outros campos detalhados podem ser exibidos aqui */}
           </div>
         </div>
 
